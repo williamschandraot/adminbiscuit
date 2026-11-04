@@ -113,7 +113,7 @@
             <h2 class="text-center" style="color: var(--navy);">Pendaftaran Akun Baru</h2>
             <label>Nama Lengkap</label><input type="text" id="regName" placeholder="Nama lengkap Anda">
             <label>Email Workspace</label><input type="email" id="regEmail" placeholder="contoh@biscuit.com">
-            <label>Password</label><input type="password" id="regPassword" placeholder="Minimal 8 karakter" onkeydown="if(event.key === 'Enter') doLogin()">
+            <label>Password</label><input type="password" id="regPassword" placeholder="Minimal 8 karakter">
             <button class="btn-gold" onclick="doRegister()">Daftar Sekarang</button>
         </div>
 
@@ -121,7 +121,7 @@
         <div id="loginSection" class="card hidden" style="max-width: 500px;">
             <h2 class="text-center" style="color: var(--navy);">Login Sistem</h2>
             <label>Email</label><input type="email" id="loginEmail" placeholder="Email terdaftar">
-            <label>Password</label><input type="password" id="loginPassword" placeholder="Password">
+            <label>Password</label><input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key === 'Enter') doLogin()">
             <button class="btn-gold" onclick="doLogin()">Masuk ke Sistem</button>
         </div>
 
