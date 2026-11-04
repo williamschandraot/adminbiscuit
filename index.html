@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Internal</title>
-    <!-- Memanggil library Appwrite -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <style>
         body {
@@ -12,11 +11,9 @@
             margin: 0;
             background-color: #f4f7f6;
             color: #333;
-            display: flex; /* Membagi layar menjadi kolom */
+            display: flex;
             min-height: 100vh;
         }
-
-        /* 1. Desain Sidebar Kiri */
         .sidebar {
             width: 250px;
             background-color: #2c3e50;
@@ -26,273 +23,264 @@
             flex-direction: column;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
-        
-        .sidebar h2 {
-            margin-top: 0;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #34495e;
-            text-align: center;
-        }
-
-        .welcome-text {
-            color: #1abc9c;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        /* Tombol di dalam Sidebar */
+        .sidebar h2 { margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; }
+        .welcome-text { color: #1abc9c; font-weight: bold; text-align: center; margin-bottom: 20px; }
         .sidebar button {
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            background-color: transparent;
-            color: #ecf0f1;
-            border: none;
-            border-radius: 5px;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.3s;
+            width: 100%; padding: 12px 15px; margin-bottom: 10px; background-color: transparent;
+            color: #ecf0f1; border: none; border-radius: 5px; text-align: left; font-size: 15px;
+            cursor: pointer; transition: 0.3s;
         }
-        .sidebar button:hover {
-            background-color: #34495e;
-            padding-left: 20px; /* Efek geser saat disorot */
-        }
-        
+        .sidebar button:hover, .sidebar button.active { background-color: #34495e; padding-left: 20px; }
         .btn-logout { background-color: #e74c3c !important; color: white !important; margin-top: 20px; text-align: center !important; }
-        .btn-logout:hover { background-color: #c0392b !important; padding-left: 15px !important; }
-        
         .btn-primary { background-color: #4285F4 !important; text-align: center !important;}
-        .btn-primary:hover { background-color: #357ae8 !important; padding-left: 15px !important; }
-
-        /* 2. Desain Area Konten Kanan */
-        .main-content {
-            flex: 1; /* Mengambil sisa ruang layar */
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Menengahkan form */
-        }
-
-        .container {
-            width: 100%;
-            max-width: 450px;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        /* Container khusus dashboard (lebih lebar) */
-        .dashboard-container {
-            max-width: 800px;
-            text-align: left;
-        }
-
+        
+        .main-content { flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .dashboard-container { max-width: 900px; text-align: left; }
         .hidden { display: none !important; }
-
-        /* Gaya Form */
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .btn-submit {
-            width: 100%;
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0 15px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        textarea { min-height: 80px; resize: vertical; }
+        .row { display: flex; gap: 15px; }
+        .row > div { flex: 1; }
+        label { font-weight: bold; font-size: 14px; color: #555; }
+        
+        .btn-submit { width: 100%; background-color: #2ecc71; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .btn-submit:hover { background-color: #27ae60; }
+        .btn-gold { background-color: #c6a45c; color: #172b45; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-gold:hover { background-color: #b5924a; }
+        
+        /* Table Styles */
+        .tablewrap { overflow-x: auto; margin-top: 20px; background: white; border-radius: 8px; border: 1px solid #e5e9f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e9f0; font-size: 14px; }
+        th { background-color: #f8fafc; color: #475467; font-weight: bold; }
+        tr:hover { background-color: #f9fbfd; }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR KIRI -->
     <div class="sidebar">
         <h2>Sistem Internal</h2>
-        
-        <!-- Menu Guest (Belum Login) -->
         <div id="guestMenu">
             <button id="showLoginBtn">Form Login</button>
             <button id="showRegisterBtn" class="btn-primary">Register Akun Baru</button>
         </div>
-
-        <!-- Menu Internal (Sudah Login) -->
         <div id="loggedInMenu" class="hidden">
             <div class="welcome-text">Welcome, <span id="userNameDisplay"></span> !</div>
-            
-            <button class="menu-btn">Menu 1</button>
-            <button class="menu-btn">Menu 2</button>
-            <button class="menu-btn">Menu 3</button>
-            <button class="menu-btn">Menu 4</button>
-            <button class="menu-btn">Menu 5</button>
-            
+            <button class="menu-btn" onclick="showSection('dashboardSection')">Dashboard</button>
+            <button class="menu-btn" onclick="showSection('requestSection')">Input Request (Menu 2)</button>
+            <button class="menu-btn" onclick="showSection('previewSection')">Data Permintaan</button>
             <button id="logoutBtn" class="btn-logout">Logout</button>
         </div>
     </div>
 
-    <!-- AREA KONTEN KANAN -->
     <div class="main-content">
-        
-        <!-- Halaman Sambutan Awal -->
         <div id="welcomeSection" class="container text-center">
             <h3 style="text-align: center;">Selamat Datang</h3>
-            <p style="text-align: center;">Silakan klik tombol di menu sebelah kiri untuk masuk ke dalam sistem perusahaan.</p>
+            <p style="text-align: center;">Silakan login untuk mengakses sistem.</p>
         </div>
 
-        <!-- Halaman Dashboard (Berubah saat menu 1-5 diklik) -->
         <div id="dashboardSection" class="container dashboard-container hidden">
-            <h3 id="dashboardTitle">Dashboard Utama</h3>
-            <p id="dashboardContent">Anda telah berhasil masuk ke dalam sistem. Silakan pilih menu di sebelah kiri untuk mengelola data.</p>
+            <h3>Dashboard Utama</h3>
+            <p>Pilih menu di sebelah kiri untuk beraktivitas.</p>
         </div>
 
-        <!-- Form Register -->
+        <!-- MENU 2: Input Request -->
+        <div id="requestSection" class="container dashboard-container hidden">
+            <h3>Permintaan Sampel Baru</h3>
+            <div class="row">
+                <div>
+                    <label>Tanggal kebutuhan</label>
+                    <input id="reqDate" type="date" required>
+                </div>
+                <div>
+                    <label>Kategori tujuan</label>
+                    <select id="reqPurpose">
+                        <option value="Testing Internal">Testing Internal</option>
+                        <option value="Kirim Customer">Kirim Customer</option>
+                        <option value="Pameran / Event">Pameran / Event</option>
+                    </select>
+                </div>
+            </div>
+            <label>Customer / Project / Penerima</label>
+            <input id="reqRecipient" type="text" placeholder="Nama customer atau project" required>
+            
+            <label>Tujuan / Keterangan kebutuhan</label>
+            <textarea id="reqDetail" placeholder="Jelaskan kebutuhan sampel..."></textarea>
+            
+            <label>Nama Produk / SKU</label>
+            <input id="reqProduct" type="text" placeholder="Contoh: Biskuit Coklat 200g" required>
+            
+            <label>Jumlah (Qty)</label>
+            <input id="reqQty" type="number" min="1" value="1" required>
+
+            <button id="submitRequestBtn" class="btn-gold" style="width: 100%; margin-top: 10px;">Kirim Permintaan</button>
+        </div>
+
+        <!-- MENU PREVIEW: Tabel Data -->
+        <div id="previewSection" class="container dashboard-container hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Data Permintaan</h3>
+                <button id="refreshDataBtn" class="btn-primary" style="padding: 8px 15px; border:none; border-radius:5px; color:white; cursor:pointer;">Refresh Data</button>
+            </div>
+            <div class="tablewrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal Kebutuhan</th>
+                            <th>Kategori</th>
+                            <th>Penerima</th>
+                            <th>Produk (Qty)</th>
+                            <th>Keterangan</th>
+                            <th>Diajukan Oleh</th>
+                            <th>Waktu Submit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="registerSection" class="container hidden">
             <h3 style="text-align: center;">Pendaftaran Akun</h3>
             <input type="text" id="regName" placeholder="Nama Lengkap" required>
-            <input type="text" id="regUsername" placeholder="Username" required>
             <input type="email" id="regEmail" placeholder="Alamat Email" required>
             <input type="password" id="regPassword" placeholder="Password (Min. 8 karakter)" required>
             <button id="doRegisterBtn" class="btn-submit">Daftar Sekarang</button>
         </div>
 
-        <!-- Form Login -->
         <div id="loginSection" class="container hidden">
             <h3 style="text-align: center;">Login Sistem</h3>
-            <input type="text" id="loginId" placeholder="Email (Wajib gunakan Email)" required>
+            <input type="text" id="loginId" placeholder="Email" required>
             <input type="password" id="loginPassword" placeholder="Password" required>
             <button id="doLoginBtn" class="btn-submit">Masuk</button>
         </div>
-
     </div>
 
     <script>
-        // 1. Inisialisasi Koneksi ke Appwrite
-        const { Client, Account, ID } = Appwrite;
+        const { Client, Account, Databases, ID, Query } = Appwrite;
         const client = new Client()
             .setEndpoint('https://sgp.cloud.appwrite.io/v1')
             .setProject('6aea915d0004c5f2b544');
 
         const account = new Account(client);
+        const databases = new Databases(client);
 
-        // 2. Deklarasi Elemen-elemen HTML
-        const welcomeSec = document.getElementById('welcomeSection');
-        const loginSec = document.getElementById('loginSection');
-        const registerSec = document.getElementById('registerSection');
-        const dashboardSec = document.getElementById('dashboardSection');
-        
-        const guestMenu = document.getElementById('guestMenu');
-        const loggedInMenu = document.getElementById('loggedInMenu');
-        const userNameDisplay = document.getElementById('userNameDisplay');
+        // KONFIGURASI DATABASE (Ganti dengan ID asli dari Appwrite Anda)
+        const dbId = 'ISI_DATABASE_ID_DISINI'; 
+        const collId = 'ISI_COLLECTION_ID_DISINI'; 
 
-        // 3. Cek Status Login
-        account.get()
-            .then(function (user) {
-                // JIKA SUDAH LOGIN
-                guestMenu.classList.add('hidden');
-                loggedInMenu.classList.remove('hidden');
-                
-                welcomeSec.classList.add('hidden');
-                loginSec.classList.add('hidden');
-                registerSec.classList.add('hidden');
-                dashboardSec.classList.remove('hidden');
+        let currentUser = null;
 
-                const fullName = user.name;
-                const justName = fullName.split(' (')[0]; 
-                userNameDisplay.textContent = justName;
-            })
-            .catch(function (error) {
-                // JIKA BELUM LOGIN
-                // Biarkan tampilan menu guest
-            });
+        // Cek Login
+        account.get().then(user => {
+            currentUser = user;
+            document.getElementById('guestMenu').classList.add('hidden');
+            document.getElementById('loggedInMenu').classList.remove('hidden');
+            document.getElementById('welcomeSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userNameDisplay').textContent = user.name;
+        }).catch(() => {});
 
-        // 4. Logika Tampilkan Form (Guest)
-        document.getElementById('showLoginBtn').addEventListener('click', () => {
-            welcomeSec.classList.add('hidden'); 
-            registerSec.classList.add('hidden'); 
-            loginSec.classList.remove('hidden');
-        });
+        // Navigasi Section
+        function showSection(sectionId) {
+            const sections = ['welcomeSection', 'dashboardSection', 'requestSection', 'previewSection', 'loginSection', 'registerSection'];
+            sections.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            if(sectionId === 'previewSection') loadRequestData();
+        }
 
-        document.getElementById('showRegisterBtn').addEventListener('click', () => {
-            welcomeSec.classList.add('hidden'); 
-            loginSec.classList.add('hidden'); 
-            registerSec.classList.remove('hidden');
-        });
+        document.getElementById('showLoginBtn').onclick = () => showSection('loginSection');
+        document.getElementById('showRegisterBtn').onclick = () => showSection('registerSection');
 
-        // 5. Logika Menu 1 sampai 5
-        const menuBtns = document.querySelectorAll('.menu-btn');
-        const dashboardTitle = document.getElementById('dashboardTitle');
-        const dashboardContent = document.getElementById('dashboardContent');
+        // Submit Request (Simpan ke Database)
+        document.getElementById('submitRequestBtn').onclick = () => {
+            if (!currentUser) return alert("Silakan login terlebih dahulu!");
+            if (dbId === 'ISI_DATABASE_ID_DISINI') return alert("Tolong ganti dbId dan collId di dalam kode JavaScript dengan ID Database Appwrite Anda.");
 
-        menuBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const menuName = e.target.textContent;
-                dashboardTitle.textContent = "Halaman " + menuName;
-                dashboardContent.textContent = "Ini adalah area untuk " + menuName + ". Nantinya Anda bisa meletakkan form, tabel database, atau grafik di sini.";
-            });
-        });
+            const data = {
+                required_date: document.getElementById('reqDate').value,
+                purpose_category: document.getElementById('reqPurpose').value,
+                recipient: document.getElementById('reqRecipient').value,
+                purpose_detail: document.getElementById('reqDetail').value,
+                product_name: document.getElementById('reqProduct').value,
+                quantity: parseInt(document.getElementById('reqQty').value),
+                requester_name: currentUser.name,
+                submit_time: new Date().toISOString()
+            };
 
-        // 6. Logika Proses Register
-        document.getElementById('doRegisterBtn').addEventListener('click', () => {
-            const name = document.getElementById('regName').value;
-            const username = document.getElementById('regUsername').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-
-            if (password.length < 8) {
-                alert('Password harus minimal 8 karakter!');
-                return;
+            if(!data.required_date || !data.recipient || !data.product_name) {
+                return alert("Mohon lengkapi semua kolom wajib!");
             }
 
-            const combinedName = `${name} (${username})`;
+            document.getElementById('submitRequestBtn').textContent = 'Menyimpan...';
 
-            account.create(ID.unique(), email, password, combinedName)
+            databases.createDocument(dbId, collId, ID.unique(), data)
                 .then(() => {
-                    alert('Registrasi berhasil! Silakan login menggunakan Email dan Password Anda.');
-                    document.getElementById('showLoginBtn').click();
+                    alert('Permintaan berhasil disimpan!');
+                    document.getElementById('reqDate').value = '';
+                    document.getElementById('reqRecipient').value = '';
+                    document.getElementById('reqDetail').value = '';
+                    document.getElementById('reqProduct').value = '';
+                    document.getElementById('reqQty').value = '1';
+                    document.getElementById('submitRequestBtn').textContent = 'Kirim Permintaan';
                 })
-                .catch(error => {
-                    alert('Registrasi gagal: ' + error.message);
+                .catch(err => {
+                    alert('Gagal menyimpan: ' + err.message);
+                    document.getElementById('submitRequestBtn').textContent = 'Kirim Permintaan';
                 });
-        });
+        };
 
-        // 7. Logika Proses Login
-        document.getElementById('doLoginBtn').addEventListener('click', () => {
-            const loginId = document.getElementById('loginId').value;
-            const password = document.getElementById('loginPassword').value;
+        // Load Data untuk Preview
+        function loadRequestData() {
+            if (dbId === 'ISI_DATABASE_ID_DISINI') return;
+            const tbody = document.getElementById('requestTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>';
 
-            if (!loginId.includes('@')) {
-                alert('Sistem saat ini mewajibkan penggunaan Email untuk Login. Silakan masukkan alamat Email Anda.');
-                return;
-            }
-
-            account.createEmailPasswordSession(loginId, password)
-                .then(() => {
-                    window.location.reload();
+            databases.listDocuments(dbId, collId, [Query.orderDesc('submit_time')])
+                .then(res => {
+                    if (res.documents.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Belum ada data permintaan.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = res.documents.map(doc => {
+                        const dateObj = new Date(doc.submit_time);
+                        const submitTimeStr = dateObj.toLocaleString('id-ID');
+                        return `
+                            <tr>
+                                <td>${doc.required_date}</td>
+                                <td>${doc.purpose_category}</td>
+                                <td>${doc.recipient}</td>
+                                <td>${doc.product_name} (${doc.quantity})</td>
+                                <td>${doc.purpose_detail || '-'}</td>
+                                <td><b>${doc.requester_name}</b></td>
+                                <td>${submitTimeStr}</td>
+                            </tr>
+                        `;
+                    }).join('');
                 })
-                .catch(error => {
-                    alert('Login gagal. Cek kembali Email dan Password Anda.');
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">Gagal memuat data: ${err.message}</td></tr>`;
                 });
-        });
+        }
 
-        // 8. Logika Proses Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            account.deleteSession('current')
-                .then(() => {
-                    window.location.reload();
-                });
-        });
+        document.getElementById('refreshDataBtn').onclick = loadRequestData;
+
+        // Login, Register, Logout
+        document.getElementById('doRegisterBtn').onclick = () => {
+            const n = document.getElementById('regName').value, e = document.getElementById('regEmail').value, p = document.getElementById('regPassword').value;
+            if(p.length < 8) return alert('Password minimal 8 karakter');
+            account.create(ID.unique(), e, p, n).then(() => { alert('Berhasil daftar! Silakan login.'); showSection('loginSection'); }).catch(e => alert(e.message));
+        };
+        document.getElementById('doLoginBtn').onclick = () => {
+            account.createEmailPasswordSession(document.getElementById('loginId').value, document.getElementById('loginPassword').value)
+                .then(() => window.location.reload()).catch(e => alert('Login gagal: ' + e.message));
+        };
+        document.getElementById('logoutBtn').onclick = () => account.deleteSession('current').then(() => window.location.reload());
     </script>
 </body>
 </html>
