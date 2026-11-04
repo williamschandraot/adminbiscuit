@@ -1,286 +1,359 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <base target="_top">
-  <!-- Memanggil library Appwrite -->
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
-  <style>
-    /* CSS ASLI DARI INDEXX.HTML ANDA */
-    :root{--navy:#142d4e;--gold:#c6a45c;--bg:#f4f6fa;--ink:#1d2939;--muted:#667085;--line:#e5e9f0}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial,sans-serif;color:var(--ink)}
-    header{background:var(--navy);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
-    header b{font-size:19px;letter-spacing:.5px}header small{color:#d9e2ef}
-    main{max-width:1200px;margin:24px auto;padding:0 18px}.welcome{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 2px 8px #102a4308}
-    .metric{font-size:26px;font-weight:700;margin-top:8px}.muted{color:var(--muted)}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-    button,.btn{border:0;border-radius:8px;padding:10px 14px;background:var(--navy);color:white;cursor:pointer;font-weight:600}
-    button.secondary{background:#e9edf3;color:var(--navy)}button.gold{background:var(--gold);color:#172b45}
-    .tab.active{background:var(--gold);color:#172b45}.panel{display:none}.panel.active{display:block}
-    label{display:block;font-weight:600;margin:12px 0 5px}input,select,textarea{width:100%;padding:10px;border:1px solid #cfd6e1;border-radius:8px;background:#fff;font:inherit}
-    textarea{min-height:75px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tablewrap{overflow:auto;margin-top:12px}
-    table{border-collapse:collapse;width:100%;background:#fff}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}th{background:#f8fafc;color:#475467}
-    .status{padding:4px 8px;border-radius:20px;background:#eef2f6;font-size:12px}.notice{padding:12px;border-radius:8px;background:#fff7e6;color:#73520c;margin:12px 0}
-    .itemrow{display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin:8px 0}.hidden{display:none !important;}.actions{display:flex;gap:6px}
-    @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}header{padding:15px}.welcome{display:block}.itemrow{grid-template-columns:1fr 1fr}.itemrow button{grid-column:span 2}}
-    
-    /* Tambahan CSS Khusus untuk Layar Login */
-    #authOverlay { max-width: 400px; margin: 60px auto; }
-    .auth-title { text-align: center; color: var(--navy); margin-bottom: 20px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biscuit Admin - Portal</title>
+    <!-- Memanggil library Appwrite -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+    <style>
+        /* TEMA WARNA DARI INDEXX.HTML */
+        :root { --navy: #142d4e; --gold: #c6a45c; --bg: #f4f6fa; --ink: #1d2939; --muted: #667085; --line: #e5e9f0; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: var(--bg); color: var(--ink); display: flex; min-height: 100vh; font-size: 14px; }
+
+        /* 1. SIDEBAR NAVIGASI (Sesuai keinginan Anda) */
+        .sidebar { width: 250px; background-color: var(--navy); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        .sidebar h2 { margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; font-size: 19px; letter-spacing: 0.5px; }
+        .sidebar h2 small { display: block; font-size: 11px; color: #d9e2ef; margin-top: 5px; font-weight: normal; }
+        
+        .welcome-text { color: var(--gold); font-weight: bold; text-align: center; margin-bottom: 20px; font-size: 14px; }
+        
+        .sidebar button { width: 100%; padding: 12px 15px; margin-bottom: 10px; background-color: transparent; color: #ecf0f1; border: none; border-radius: 8px; text-align: left; font-size: 14px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .sidebar button:hover, .sidebar button.active { background-color: var(--gold); color: #172b45; padding-left: 20px; }
+        
+        .btn-logout { background-color: #e74c3c !important; color: white !important; margin-top: 20px; text-align: center !important; }
+        .btn-logout:hover { background-color: #c0392b !important; }
+
+        /* 2. KONTEN UTAMA & KARTU (Dari Indexx.html) */
+        .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
+        .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); width: 100%; max-width: 1000px; margin: 0 auto; }
+        
+        /* Grid Dashboard */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 15px; }
+        .grid-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); }
+        .metric { font-size: 26px; font-weight: 700; margin-top: 8px; }
+        .muted { color: var(--muted); }
+        
+        /* Form, Input & Tombol */
+        label { display: block; font-weight: 600; margin: 12px 0 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cfd6e1; border-radius: 8px; background: #fff; font: inherit; }
+        textarea { min-height: 75px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .itemrow { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; margin: 8px 0; }
+        
+        .btn-gold { background: var(--gold); color: #172b45; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 15px; }
+        .btn-gold:hover { opacity: 0.9; }
+        .btn-secondary { background: #e9edf3; color: var(--navy); border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        
+        /* Tabel */
+        .tablewrap { overflow: auto; margin-top: 12px; }
+        table { border-collapse: collapse; width: 100%; background: #fff; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        th { background: #f8fafc; color: #475467; font-weight: bold; }
+        .status { padding: 4px 8px; border-radius: 20px; background: #eef2f6; font-size: 12px; font-weight: bold; }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+    </style>
 </head>
 <body>
 
-<!-- LAYAR LOGIN & REGISTER (Menutupi sistem sebelum masuk) -->
-<div id="authOverlay" class="card">
-    <div id="loginForm">
-        <h2 class="auth-title">Login BISCUIT ADMIN</h2>
-        <label>Email</label><input type="email" id="loginEmail">
-        <label>Password</label><input type="password" id="loginPassword">
-        <button onclick="doLogin()" style="width:100%; margin-top:15px;">Masuk</button>
-        <p style="text-align:center; margin-top:15px; font-size:12px;">Belum punya akun? <a href="#" onclick="toggleAuth()">Daftar di sini</a></p>
-    </div>
-    <div id="registerForm" class="hidden">
-        <h2 class="auth-title">Daftar Akun Baru</h2>
-        <label>Nama Lengkap</label><input type="text" id="regName">
-        <label>Email</label><input type="email" id="regEmail">
-        <label>Password (Min 8 karakter)</label><input type="password" id="regPassword">
-        <button onclick="doRegister()" class="gold" style="width:100%; margin-top:15px;">Daftar</button>
-        <p style="text-align:center; margin-top:15px; font-size:12px;">Sudah punya akun? <a href="#" onclick="toggleAuth()">Login di sini</a></p>
-    </div>
-</div>
-
-<!-- SISTEM UTAMA BISCUIT ADMIN (Tersembunyi sampai berhasil login) -->
-<div id="mainApp" class="hidden">
-    <header>
-        <div><b>BISCUIT ADMIN</b><br><small>Sample Request & Administration System</small></div>
-        <div style="display:flex; gap:15px; align-items:center;">
-            <div id="userBadge">Memuat akun...</div>
-            <button class="secondary" onclick="doLogout()" style="padding: 5px 10px; font-size:12px;">Logout</button>
+    <!-- SIDEBAR KIRI -->
+    <div class="sidebar">
+        <h2>BISCUIT ADMIN<small>Sample Request System</small></h2>
+        
+        <!-- Menu Guest (Belum Login) -->
+        <div id="guestMenu">
+            <button onclick="showSection('welcomeSection')" class="active" id="navWelcome">Landing Page</button>
+            <button onclick="showSection('loginSection')" id="navLogin">Form Login</button>
+            <button onclick="showSection('registerSection')" id="navRegister">Daftar Akun Baru</button>
         </div>
-    </header>
-    
-    <main>
-      <div class="welcome">
-          <div><h2 style="margin:0">Dashboard</h2><div class="muted" id="hello">Memuat data...</div></div>
-          <button class="secondary" onclick="loadRequests()">Refresh data</button>
-      </div>
-      
-      <!-- Metrics Card (Data Statis Sementara) -->
-      <div class="grid" id="metrics">
-          <div class="card"><div class="muted">Total permintaan</div><div class="metric" id="metricTotal">0</div></div>
-          <div class="card"><div class="muted">Menunggu proses</div><div class="metric">0</div></div>
-          <div class="card"><div class="muted">Disetujui / diproses</div><div class="metric">0</div></div>
-          <div class="card"><div class="muted">Status Sistem</div><div class="metric" style="color:green; font-size:16px;">Appwrite Terhubung</div></div>
-      </div>
-      
-      <div class="tabs">
-        <button class="tab active" onclick="tab('request',this)">Input Request</button>
-        <button class="tab" onclick="tab('requests',this); loadRequests();">Data Permintaan</button>
-        <!-- Tab lain disembunyikan sementara karena butuh collection database terpisah -->
-        <button class="tab" style="opacity: 0.5; cursor: not-allowed;" title="Dalam Pengembangan">Master Produk</button>
-      </div>
 
-      <!-- TAB 1: FORM INPUT REQUEST -->
-      <section id="request" class="panel active card">
-        <h3>Permintaan Sampel Baru</h3>
-        <div class="row">
-            <div><label>Tanggal kebutuhan</label><input id="requiredDate" type="date"></div>
-            <div>
-                <label>Kategori tujuan</label>
-                <select id="purpose">
-                    <option>Testing Internal</option>
-                    <option>Kirim Customer</option>
-                    <option>Pameran / Event</option>
-                </select>
+        <!-- Menu Internal (Sesudah Login) -->
+        <div id="loggedInMenu" class="hidden">
+            <div class="welcome-text" id="userNameDisplay">Memuat akun...</div>
+            
+            <button class="nav-btn active" onclick="navTo('dashboardSection', this)">Dashboard</button>
+            <button class="nav-btn" onclick="navTo('requestSection', this)">Input Request</button>
+            <button class="nav-btn" onclick="navTo('previewSection', this); loadRequests();">Data Permintaan</button>
+            
+            <button id="logoutBtn" class="btn-logout">Logout Sistem</button>
+        </div>
+    </div>
+
+    <!-- AREA KONTEN KANAN -->
+    <div class="main-content">
+        
+        <!-- 1. LANDING PAGE AWAL -->
+        <div id="welcomeSection" class="card text-center">
+            <h2 style="color: var(--navy);">Selamat Datang di BISCUIT ADMIN</h2>
+            <p class="muted">Sistem Administrasi dan Permintaan Sampel Internal.</p>
+            <p>Silakan gunakan menu di sebelah kiri untuk <b>Login</b> atau <b>Mendaftar Akun Baru</b>.</p>
+        </div>
+
+        <!-- 2. FORM REGISTER -->
+        <div id="registerSection" class="card hidden" style="max-width: 500px;">
+            <h2 class="text-center" style="color: var(--navy);">Pendaftaran Akun Baru</h2>
+            <label>Nama Lengkap</label><input type="text" id="regName" placeholder="Masukkan nama Anda">
+            <label>Email Workspace / Pribadi</label><input type="email" id="regEmail" placeholder="contoh@biscuit.com">
+            <label>Password</label><input type="password" id="regPassword" placeholder="Minimal 8 karakter">
+            <button class="btn-gold" onclick="doRegister()">Daftar Sekarang</button>
+        </div>
+
+        <!-- 3. FORM LOGIN -->
+        <div id="loginSection" class="card hidden" style="max-width: 500px;">
+            <h2 class="text-center" style="color: var(--navy);">Login Sistem</h2>
+            <label>Email</label><input type="email" id="loginEmail" placeholder="Masukkan email terdaftar">
+            <label>Password</label><input type="password" id="loginPassword" placeholder="Masukkan password">
+            <button class="btn-gold" onclick="doLogin()">Masuk ke Sistem</button>
+        </div>
+
+        <!-- 4. MENU: DASHBOARD UTAMA -->
+        <div id="dashboardSection" class="hidden" style="max-width: 1000px; margin: 0 auto; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin:0; color: var(--navy);">Dashboard</h2>
+                    <div class="muted" id="helloMsg">Memuat data...</div>
+                </div>
+                <button class="btn-secondary" onclick="loadRequests()">Refresh Data</button>
+            </div>
+            
+            <div class="grid">
+                <div class="grid-card"><div class="muted">Total permintaan</div><div class="metric" id="metricTotal">0</div></div>
+                <div class="grid-card"><div class="muted">Menunggu proses</div><div class="metric">0</div></div>
+                <div class="grid-card"><div class="muted">Disetujui / diproses</div><div class="metric">0</div></div>
+                <div class="grid-card"><div class="muted">Status Server</div><div class="metric" style="color: #2ecc71; font-size: 18px;">Online Terhubung</div></div>
             </div>
         </div>
-        <label>Tujuan / keterangan kebutuhan</label><textarea id="purposeDetail" placeholder="Jelaskan kebutuhan sampel..."></textarea>
-        <label>Customer / Project / Penerima</label><input id="recipient" placeholder="Nama customer, project, atau penerima">
-        
-        <h4>Daftar Produk</h4>
-        <div id="items"></div>
-        <button class="secondary" onclick="addItem()">+ Tambah produk</button>
-        
-        <p><button class="gold" id="btnSubmit" onclick="submitRequest()">Kirim Permintaan</button></p>
-      </section>
 
-      <!-- TAB 2: DATA PERMINTAAN -->
-      <section id="requests" class="panel card">
-          <h3>Data Permintaan</h3>
-          <div class="tablewrap" id="requestTable">Memuat tabel...</div>
-      </section>
-      
-    </main>
-</div>
+        <!-- 5. MENU: INPUT REQUEST -->
+        <div id="requestSection" class="card hidden">
+            <h3 style="margin-top: 0; color: var(--navy);">Permintaan Sampel Baru</h3>
+            <div class="row">
+                <div><label>Tanggal kebutuhan</label><input id="requiredDate" type="date"></div>
+                <div>
+                    <label>Kategori tujuan</label>
+                    <select id="purpose">
+                        <option>Testing Internal</option>
+                        <option>Kirim Customer</option>
+                        <option>Pameran / Event</option>
+                    </select>
+                </div>
+            </div>
+            <label>Tujuan / keterangan kebutuhan</label>
+            <textarea id="purposeDetail" placeholder="Jelaskan kebutuhan sampel..."></textarea>
+            
+            <label>Customer / Project / Penerima</label>
+            <input id="recipient" placeholder="Nama customer, project, atau penerima">
+            
+            <h4 style="border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-top: 25px;">Daftar Produk</h4>
+            <div id="itemsContainer"></div>
+            <button class="btn-secondary" onclick="addItem()">+ Tambah produk</button>
+            
+            <p><button class="btn-gold" id="btnSubmitReq" onclick="submitRequest()">Kirim Permintaan</button></p>
+        </div>
 
-<script>
-    // 1. Inisialisasi Appwrite
-    const { Client, Account, Databases, ID, Query } = Appwrite;
-    const client = new Client()
-        .setEndpoint('https://sgp.cloud.appwrite.io/v1')
-        .setProject('6aea915d0004c5f2b544');
+        <!-- 6. MENU: DATA PERMINTAAN -->
+        <div id="previewSection" class="card hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--navy);">Data Permintaan</h3>
+                <button class="btn-secondary" onclick="loadRequests()">Refresh Tabel</button>
+            </div>
+            <div class="tablewrap" id="requestTable">
+                Memuat tabel data...
+            </div>
+        </div>
 
-    const account = new Account(client);
-    const databases = new Databases(client);
+    </div>
 
-    // KONFIGURASI DATABASE
-    const dbId = 'ISI_DATABASE_ID';      // Ganti dengan ID Database Anda
-    const collId = 'ISI_COLLECTION_ID';  // Ganti dengan ID Collection "Requests"
+    <script>
+        // ==========================================
+        // 1. INISIALISASI KONEKSI APPWRITE
+        // ==========================================
+        const { Client, Account, Databases, ID, Query } = Appwrite;
+        const client = new Client()
+            .setEndpoint('https://sgp.cloud.appwrite.io/v1')
+            .setProject('6aea915d0004c5f2b544');
 
-    let currentUser = null;
-    let itemCount = 0;
+        const account = new Account(client);
+        const databases = new Databases(client);
 
-    // 2. Fungsi Cek Login
-    account.get().then(user => {
-        currentUser = user;
-        document.getElementById('authOverlay').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        
-        document.getElementById('userBadge').innerHTML = `${user.name} · Staff`;
-        document.getElementById('hello').textContent = `Halo, ${user.name}. Ini ringkasan aktivitas Biscuit Admin.`;
-        
-        addItem(); // Siapkan 1 form produk saat web dimuat
-        loadRequests(); // Muat angka metrics
-    }).catch(err => {
-        // Jika belum login, biarkan authOverlay tampil
-    });
+        // PENTING: Ganti dengan ID Database dan Collection milik Anda
+        const dbId = 'ISI_DATABASE_ID';      
+        const collId = 'ISI_COLLECTION_ID';  
 
-    // 3. Logika Navigasi Tab (Asli dari kode Anda)
-    function tab(id, btn){
-        document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-        btn.classList.add('active');
-    }
+        let currentUser = null;
 
-    // 4. Logika Form Produk Dinamis (Asli)
-    function addItem(){
-        itemCount++;
-        const d = document.createElement('div');
-        d.className = 'itemrow';
-        d.id = 'item' + itemCount;
-        d.innerHTML = `
-            <input class="itemSku" type="text" placeholder="Nama Produk / SKU">
-            <input class="itemQty" type="number" min="1" value="1" placeholder="Qty">
-            <button class="secondary" onclick="this.parentElement.remove()">Hapus</button>
-        `;
-        document.getElementById('items').appendChild(d);
-    }
+        // ==========================================
+        // 2. LOGIKA CEK STATUS LOGIN SAAT WEB DIBUKA
+        // ==========================================
+        account.get().then(user => {
+            currentUser = user;
+            // Jika sudah login, sembunyikan menu guest, tampilkan menu internal
+            document.getElementById('guestMenu').classList.add('hidden');
+            document.getElementById('loggedInMenu').classList.remove('hidden');
+            
+            document.getElementById('userNameDisplay').textContent = user.name;
+            document.getElementById('helloMsg').textContent = `Halo, ${user.name}. Ini ringkasan aktivitas Biscuit Admin.`;
+            
+            // Langsung buka halaman Dashboard
+            showSection('dashboardSection');
+            
+            addItem(); // Siapkan 1 baris input produk kosong
+            loadRequests(); // Tarik data untuk mengisi angka Total Permintaan
+        }).catch(() => {
+            // Jika belum login, buka halaman Welcome
+            showSection('welcomeSection');
+        });
 
-    // 5. Menyimpan Data ke Appwrite (Pengganti Google Script)
-    function submitRequest(){
-        if(dbId === 'ISI_DATABASE_ID') return alert("Ganti DB ID dan Collection ID di kode JS terlebih dahulu!");
-
-        const btn = document.getElementById('btnSubmit');
-        btn.textContent = 'Menyimpan...';
-
-        // Ambil data dari form produk yang bisa ditambah berkali-kali
-        const itemsList = [...document.querySelectorAll('.itemrow')].map(r => {
-            return r.querySelector('.itemSku').value + " (" + r.querySelector('.itemQty').value + " pcs)";
-        }).join(', ');
-
-        const payload = {
-            required_date: document.getElementById('requiredDate').value,
-            purpose_category: document.getElementById('purpose').value,
-            purpose_detail: document.getElementById('purposeDetail').value,
-            recipient: document.getElementById('recipient').value,
-            items_list: itemsList, // Kita gabungkan item jadi string agar mudah disimpan
-            requester_name: currentUser.name,
-            status: 'PENDING'
-        };
-
-        if(!payload.required_date || !payload.recipient) {
-            btn.textContent = 'Kirim Permintaan';
-            return alert("Tanggal Kebutuhan dan Penerima wajib diisi!");
+        // ==========================================
+        // 3. FUNGSI NAVIGASI MENU (KLIK SIDEBAR)
+        // ==========================================
+        function navTo(sectionId, btnElement) {
+            // Hapus status 'active' dari semua tombol, berikan ke tombol yang diklik
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            showSection(sectionId);
         }
 
-        databases.createDocument(dbId, collId, ID.unique(), payload)
-            .then(res => {
-                alert('Permintaan berhasil dikirim!');
-                document.getElementById('purposeDetail').value = '';
-                document.getElementById('recipient').value = '';
-                document.getElementById('items').innerHTML = '';
-                addItem(); // reset baris form
-                btn.textContent = 'Kirim Permintaan';
-                loadRequests(); // Update tabel
-            })
-            .catch(err => {
-                alert('Error: ' + err.message);
-                btn.textContent = 'Kirim Permintaan';
-            });
-    }
+        function showSection(id) {
+            // Sembunyikan semua halaman, lalu tampilkan halaman yang dipilih
+            const sections = ['welcomeSection', 'loginSection', 'registerSection', 'dashboardSection', 'requestSection', 'previewSection'];
+            sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
 
-    // 6. Menarik Data dari Appwrite (Pengganti Google Script)
-    function loadRequests(){
-        if(dbId === 'ISI_DATABASE_ID') return;
-        
-        databases.listDocuments(dbId, collId, [Query.orderDesc('$createdAt')])
-            .then(res => {
-                document.getElementById('metricTotal').textContent = res.total;
+            // Khusus menu guest (agar highlightnya pas)
+            if(id === 'welcomeSection') { document.getElementById('navWelcome').classList.add('active'); document.getElementById('navLogin').classList.remove('active'); document.getElementById('navRegister').classList.remove('active');}
+            if(id === 'loginSection') { document.getElementById('navLogin').classList.add('active'); document.getElementById('navWelcome').classList.remove('active'); document.getElementById('navRegister').classList.remove('active');}
+            if(id === 'registerSection') { document.getElementById('navRegister').classList.add('active'); document.getElementById('navWelcome').classList.remove('active'); document.getElementById('navLogin').classList.remove('active');}
+        }
 
-                if (res.documents.length === 0) {
-                    document.getElementById('requestTable').innerHTML = 'Tidak ada data.';
-                    return;
-                }
+        // ==========================================
+        // 4. FUNGSI UNTUK TAMBAH PRODUK DINAMIS
+        // ==========================================
+        function addItem() {
+            const d = document.createElement('div');
+            d.className = 'itemrow';
+            d.innerHTML = `
+                <input class="itemSku" type="text" placeholder="Ketik Nama Produk / SKU">
+                <input class="itemQty" type="number" min="1" value="1" placeholder="Qty">
+                <button class="btn-secondary" style="color: #e74c3c;" onclick="this.parentElement.remove()">Hapus</button>
+            `;
+            document.getElementById('itemsContainer').appendChild(d);
+        }
 
-                // Render ke tabel (Sama dengan fungsi table() asli Anda)
-                const rows = res.documents.map(r => `
-                    <tr>
-                        <td><b>${r.$id.substring(0,8)}</b></td>
-                        <td>${r.required_date}</td>
-                        <td>${r.requester_name}</td>
-                        <td>${r.purpose_category}</td>
-                        <td>${r.recipient}</td>
-                        <td>${r.items_list}</td>
-                        <td><span class="status">${r.status}</span></td>
-                    </tr>
-                `).join('');
+        // ==========================================
+        // 5. FUNGSI MENYIMPAN DATA (SUBMIT REQUEST)
+        // ==========================================
+        function submitRequest() {
+            if(dbId === 'ISI_DATABASE_ID') return alert("PENTING: Anda harus mengganti dbId dan collId di kode (baris 183) dengan ID Database Appwrite Anda agar data bisa tersimpan.");
+            
+            const btn = document.getElementById('btnSubmitReq');
+            const reqDate = document.getElementById('requiredDate').value;
+            const recipient = document.getElementById('recipient').value;
+            
+            if(!reqDate || !recipient) return alert("Tanggal Kebutuhan dan Penerima wajib diisi!");
+            btn.textContent = 'Memproses Penyimpanan...';
 
-                document.getElementById('requestTable').innerHTML = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID Req</th>
-                                <th>Tgl Butuh</th>
-                                <th>Pemohon</th>
-                                <th>Kategori</th>
-                                <th>Penerima</th>
-                                <th>Detail Item</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            })
-            .catch(err => console.log(err));
-    }
+            // Gabungkan semua produk yang diinput menjadi satu teks panjang
+            const itemsList = [...document.querySelectorAll('.itemrow')].map(r => {
+                return r.querySelector('.itemSku').value + " (" + r.querySelector('.itemQty').value + " pcs)";
+            }).join(', ');
 
-    // 7. Logika Otentikasi (Login/Register)
-    function toggleAuth() {
-        document.getElementById('loginForm').classList.toggle('hidden');
-        document.getElementById('registerForm').classList.toggle('hidden');
-    }
-    
-    function doRegister() {
-        const n = document.getElementById('regName').value;
-        const e = document.getElementById('regEmail').value;
-        const p = document.getElementById('regPassword').value;
-        if(p.length < 8) return alert('Password minimal 8 karakter');
-        account.create(ID.unique(), e, p, n)
-            .then(() => { alert('Pendaftaran sukses! Silakan login.'); toggleAuth(); })
-            .catch(e => alert(e.message));
-    }
-    
-    function doLogin() {
-        account.createEmailPasswordSession(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
-            .then(() => window.location.reload())
-            .catch(e => alert('Login gagal: ' + e.message));
-    }
-    
-    function doLogout() {
-        account.deleteSession('current').then(() => window.location.reload());
-    }
-</script>
+            // Susun data untuk dikirim ke Appwrite
+            const payload = {
+                required_date: reqDate,
+                purpose_category: document.getElementById('purpose').value,
+                purpose_detail: document.getElementById('purposeDetail').value,
+                recipient: recipient,
+                items_list: itemsList,
+                requester_name: currentUser.name,
+                status: 'PENDING' // Status awal
+            };
+
+            // Tembak data ke Appwrite
+            databases.createDocument(dbId, collId, ID.unique(), payload)
+                .then(() => {
+                    alert('Permintaan berhasil disimpan ke sistem!');
+                    document.getElementById('purposeDetail').value = '';
+                    document.getElementById('recipient').value = '';
+                    document.getElementById('itemsContainer').innerHTML = '';
+                    addItem(); // reset baris
+                    btn.textContent = 'Kirim Permintaan';
+                })
+                .catch(err => { 
+                    alert('Gagal menyimpan: ' + err.message); 
+                    btn.textContent = 'Kirim Permintaan'; 
+                });
+        }
+
+        // ==========================================
+        // 6. FUNGSI MENARIK DATA KE TABEL
+        // ==========================================
+        function loadRequests() {
+            if(dbId === 'ISI_DATABASE_ID') return;
+            
+            // Tarik data terbaru dari Appwrite, diurutkan dari yang paling baru ($createdAt)
+            databases.listDocuments(dbId, collId, [Query.orderDesc('$createdAt')])
+                .then(res => {
+                    // Update angka di dashboard
+                    document.getElementById('metricTotal').textContent = res.total;
+                    
+                    if(res.documents.length === 0) {
+                        document.getElementById('requestTable').innerHTML = '<p>Belum ada data permintaan.</p>';
+                        return;
+                    }
+                    
+                    // Susun ulang HTML Tabel seperti desain Indexx.html
+                    const rows = res.documents.map(r => `
+                        <tr>
+                            <td><b>${r.$id.substring(0,6).toUpperCase()}</b></td>
+                            <td>${r.required_date}</td>
+                            <td>${r.requester_name}</td>
+                            <td>${r.purpose_category}</td>
+                            <td>${r.recipient}</td>
+                            <td>${r.items_list}</td>
+                            <td><span class="status">${r.status}</span></td>
+                        </tr>
+                    `).join('');
+                    
+                    document.getElementById('requestTable').innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tanggal Butuh</th>
+                                    <th>Diajukan Oleh</th>
+                                    <th>Kategori</th>
+                                    <th>Penerima / Project</th>
+                                    <th>Detail Produk</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>`;
+                });
+        }
+
+        // ==========================================
+        // 7. FUNGSI LOGIN, REGISTER, & LOGOUT
+        // ==========================================
+        function doRegister() {
+            const n = document.getElementById('regName').value, e = document.getElementById('regEmail').value, p = document.getElementById('regPassword').value;
+            if(p.length < 8) return alert('Password harus minimal 8 karakter!');
+            account.create(ID.unique(), e, p, n)
+                .then(() => { alert('Pendaftaran sukses! Silakan pindah ke menu Form Login.'); showSection('loginSection'); })
+                .catch(e => alert(e.message));
+        }
+        function doLogin() {
+            account.createEmailPasswordSession(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
+                .then(() => window.location.reload()) // Refresh web agar mendeteksi status login
+                .catch(e => alert('Gagal Login: Periksa email dan password Anda.'));
+        }
+        document.getElementById('logoutBtn').onclick = () => {
+            account.deleteSession('current').then(() => window.location.reload());
+        };
+    </script>
 </body>
 </html>
