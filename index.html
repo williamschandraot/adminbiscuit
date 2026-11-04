@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biscuit Admin - Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+    <!-- Library untuk Export Excel & PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         :root { --navy: #142d4e; --gold: #c6a45c; --bg: #f4f6fa; --ink: #1d2939; --muted: #667085; --line: #e5e9f0; }
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; background-color: var(--bg); color: var(--ink); display: flex; min-height: 100vh; font-size: 14px; }
 
         /* Sidebar Kiri */
-        .sidebar { width: 250px; background-color: var(--navy); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-        .sidebar h2 { margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; font-size: 19px; letter-spacing: 0.5px; }
-        .sidebar h2 small { display: block; font-size: 11px; color: #d9e2ef; margin-top: 5px; font-weight: normal; }
+        .sidebar { width: 250px; background-color: var(--navy); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 10; }
+        .sidebar h2 { margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; font-size: 19px; }
         .welcome-text { color: var(--gold); font-weight: bold; text-align: center; margin-bottom: 20px; font-size: 14px; }
         .sidebar button { width: 100%; padding: 12px 15px; margin-bottom: 10px; background-color: transparent; color: #ecf0f1; border: none; border-radius: 8px; text-align: left; font-size: 14px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .sidebar button:hover, .sidebar button.active { background-color: var(--gold); color: #172b45; padding-left: 20px; }
         .btn-logout { background-color: #e74c3c !important; color: white !important; margin-top: auto; text-align: center !important; }
-        .btn-logout:hover { background-color: #c0392b !important; }
 
         /* Konten Utama */
         .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
@@ -33,296 +35,242 @@
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cfd6e1; border-radius: 8px; background: #fff; font: inherit; }
         textarea { min-height: 75px; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .itemrow { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; margin: 8px 0; }
-        
-        /* Input Read-Only */
-        input:disabled, select:disabled, textarea:disabled { background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: #e2e8f0; }
+        .itemrow { display: grid; grid-template-columns: 2fr 100px 100px auto; gap: 8px; margin: 8px 0; }
+        input:disabled, select:disabled, textarea:disabled { background-color: #f8fafc; color: #334155; cursor: not-allowed; }
 
         .btn-gold { background: var(--gold); color: #172b45; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 15px; }
-        .btn-gold:hover { opacity: 0.9; }
-        .btn-secondary { background: #e9edf3; color: var(--navy); border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-secondary { background: #e9edf3; color: var(--navy); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-blue { background: #3498db; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-blue:hover { background: #2980b9; }
         
-        /* Tombol Aksi */
+        /* Tombol Aksi Approver */
         .btn-action-approve { background: #2ecc71; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 6px; }
         .btn-action-reject { background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-action-approve:hover { background: #27ae60; }
-        .btn-action-reject:hover { background: #c0392b; }
-
-        /* Tabel & Status Badge */
+        
+        /* Tabel & Expand/Collapse */
         .tablewrap { overflow: auto; margin-top: 12px; }
-        table { border-collapse: collapse; width: 100%; background: #fff; }
-        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        table { border-collapse: collapse; width: 100%; background: #fff; table-layout: fixed; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
         th { background: #f8fafc; color: #475467; font-weight: bold; }
+        
+        .col-id { width: 80px; }
+        .col-kategori { width: 150px; }
+        .col-detail { width: 150px; } 
+        
+        .prod-cell {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; 
+            width: 100%; cursor: pointer; color: var(--navy); transition: 0.2s;
+        }
+        .prod-cell::after { content: ' ▼'; font-size: 10px; color: #999; }
+        .prod-cell.expanded { white-space: normal; word-wrap: break-word; overflow: visible; }
+        .prod-cell.expanded::after { content: ' ▲'; }
+
         .status { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .status-PENDING { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
-        .status-APPROVED { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
-        .status-REJECTED { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+        .status-PENDING { background: #fff7e6; color: #d46b08; }
+        .status-APPV_1 { background: #e6f7ff; color: #096dd9; }
+        .status-APPROVED { background: #f6ffed; color: #389e0d; }
+        .status-REJECTED { background: #fff1f0; color: #cf1322; }
+        .status-RECEIVED { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; } /* Hijau terang */
 
         .id-link { color: var(--navy); font-weight: bold; text-decoration: underline; cursor: pointer; }
-        .id-link:hover { color: var(--gold); }
-
         .hidden { display: none !important; }
         .text-center { text-align: center; }
+        .export-btns { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
-    <!-- DATALIST PRODUK AUTOCOMPLETE -->
-    <datalist id="productList">
-        <option value="Prod1">
-        <option value="Prod2">
-        <option value="Prod3">
-    </datalist>
+    <datalist id="productList"></datalist>
 
-    <!-- SIDEBAR KIRI -->
     <div class="sidebar">
-        <h2>BISCUIT ADMIN<small></small></h2>
+        <h2>BISCUIT ADMIN<small style="display:block; font-size:11px; margin-top:5px; font-weight:normal;">Sample Request</small></h2>
         
-        <!-- Menu Tamu -->
         <div id="guestMenu">
-            <button onclick="showSection('welcomeSection')" class="active" id="navWelcome">Landing Page</button>
-            <button onclick="showSection('loginSection')" id="navLogin">Form Login</button>
-            <button onclick="showSection('registerSection')" id="navRegister">Daftar Akun</button>
+            <button onclick="showSection('welcomeSection')" class="active">Landing Page</button>
+            <button onclick="showSection('loginSection')">Form Login</button>
+            <button onclick="showSection('registerSection')">Daftar Akun</button>
         </div>
 
-        <!-- Menu Internal -->
         <div id="loggedInMenu" class="hidden">
             <div class="welcome-text" id="userNameDisplay">Memuat akun...</div>
             <button class="nav-btn active" onclick="navTo('dashboardSection', this)">Menu 1 (Dashboard)</button>
             <button class="nav-btn" onclick="navTo('requestSection', this)">Menu 2 (Input Request)</button>
             <button class="nav-btn" onclick="navTo('previewSection', this); loadRequests();">Menu 3 (Data Permintaan)</button>
-            <button id="navApproval" class="nav-btn hidden" onclick="navTo('approvalSection', this); loadApprovalInbox();">Menu 4 (Approval Inbox)</button>
-            <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">Menu 5</button>
-            
             <button id="logoutBtn" class="btn-logout">Logout Sistem</button>
         </div>
     </div>
 
-    <!-- AREA KONTEN -->
     <div class="main-content">
         
-        <!-- Landing Page -->
-        <div id="welcomeSection" class="card text-center">
-            <h2 style="color: var(--navy);">Selamat Datang di BISCUIT ADMIN</h2>
-            <p class="muted">Sistem Administrasi dan Permintaan Sampel Internal.</p>
-            <p>Silakan gunakan menu di sebelah kiri untuk <b>Login</b> atau <b>Mendaftar Akun Baru</b>.</p>
-        </div>
-
-        <!-- Register -->
-        <div id="registerSection" class="card hidden" style="max-width: 500px;">
-            <h2 class="text-center" style="color: var(--navy);">Pendaftaran Akun Baru</h2>
-            <label>Nama Lengkap</label><input type="text" id="regName" placeholder="Nama lengkap Anda">
-            <label>Email Workspace</label><input type="email" id="regEmail" placeholder="contoh@biscuit.com">
-            <label>Password</label><input type="password" id="regPassword" placeholder="Minimal 8 karakter">
-            <button class="btn-gold" onclick="doRegister()">Daftar Sekarang</button>
-        </div>
-
-        <!-- Login -->
-        <div id="loginSection" class="card hidden" style="max-width: 500px;">
-            <h2 class="text-center" style="color: var(--navy);">Login Sistem</h2>
-            <label>Email</label><input type="email" id="loginEmail" placeholder="Email terdaftar">
-            <label>Password</label><input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key === 'Enter') doLogin()">
-            <button class="btn-gold" onclick="doLogin()">Masuk ke Sistem</button>
-        </div>
-
-        <!-- Menu 1: Dashboard -->
+        <!-- Dashboard -->
         <div id="dashboardSection" class="hidden" style="max-width: 1100px; margin: 0 auto; width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h2 style="margin:0; color: var(--navy);">Dashboard</h2>
-                    <div class="muted" id="helloMsg">Memuat data...</div>
-                </div>
+                <div><h2 style="margin:0; color: var(--navy);">Dashboard</h2><div class="muted">Ringkasan aktivitas dan estimasi biaya.</div></div>
                 <button class="btn-secondary" onclick="loadRequests()">Refresh Data</button>
             </div>
-            
             <div class="grid">
                 <div class="grid-card"><div class="muted">Total Permintaan</div><div class="metric" id="metricTotal">0</div></div>
                 <div class="grid-card"><div class="muted">Menunggu Proses</div><div class="metric" id="metricPending" style="color: #d46b08;">0</div></div>
-                <div class="grid-card"><div class="muted">Disetujui</div><div class="metric" id="metricApproved" style="color: #389e0d;">0</div></div>
-                <div class="grid-card"><div class="muted">Status Server</div><div class="metric" style="color: #2ecc71; font-size: 18px;">Online Terhubung</div></div>
+                <div class="grid-card"><div class="muted">Selesai / Diterima</div><div class="metric" id="metricApproved" style="color: #389e0d;">0</div></div>
+                <div class="grid-card"><div class="muted">Estimasi Biaya Request</div><div class="metric" style="color: #e74c3c; font-size: 20px;" id="metricCost">Rp 0</div></div>
             </div>
         </div>
 
-        <!-- Menu 2: Input Request -->
+        <!-- Input Request -->
         <div id="requestSection" class="card hidden">
             <h3 style="margin-top: 0; color: var(--navy);">Permintaan Sampel Baru</h3>
             <div class="row">
                 <div><label>Tanggal kebutuhan</label><input id="requiredDate" type="date"></div>
-                <div>
-                    <label>Kategori tujuan</label>
-                    <select id="purpose">
-                        <option>Testing Internal</option>
-                        <option>Kirim Customer</option>
-                        <option>Pameran / Event</option>
-                    </select>
-                </div>
+                <div><label>Kategori tujuan</label><select id="purpose"><option>Testing Internal</option><option>Kirim Customer</option><option>Pameran / Event</option></select></div>
             </div>
-            <label>Tujuan / keterangan kebutuhan</label>
-            <textarea id="purposeDetail" placeholder="Jelaskan kebutuhan sampel..."></textarea>
-            
-            <label>Customer / Project / Penerima</label>
-            <input id="recipient" placeholder="Nama customer, project, atau penerima">
+            <label>Tujuan / keterangan</label><textarea id="purposeDetail"></textarea>
+            <label>Customer / Penerima</label><input id="recipient">
             
             <h4 style="border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-top: 25px;">Daftar Produk</h4>
             <div id="itemsContainer"></div>
             <button class="btn-secondary" onclick="addItem()">+ Tambah produk</button>
-            
             <p><button class="btn-gold" id="btnSubmitReq" onclick="submitRequest()">Kirim Permintaan</button></p>
         </div>
 
-        <!-- Menu 3: Data Permintaan -->
+        <!-- Data Permintaan (Menu 3) -->
         <div id="previewSection" class="card hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: var(--navy);">Data Permintaan</h3>
-                <button class="btn-secondary" onclick="loadRequests()">Refresh Tabel</button>
-            </div>
-            <p class="muted" style="margin-top: 0;">Klik pada <b>ID</b> permintaan untuk melihat detail lengkap.</p>
-            <div class="tablewrap" id="requestTable">
-                Memuat tabel data...
-            </div>
-        </div>
-
-        <!-- Menu 4: Approval Inbox -->
-        <div id="approvalSection" class="card hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div>
-                    <h3 style="margin: 0; color: var(--navy);">Approval Inbox</h3>
-                    <p class="muted" style="margin: 5px 0 0;">Daftar permintaan yang menunggu peninjauan dan persetujuan.</p>
+                <div class="export-btns">
+                    <button class="btn-secondary" onclick="exportExcel()" style="background:#27ae60; color:white;">⬇ Excel</button>
+                    <button class="btn-secondary" onclick="exportPDF()" style="background:#c0392b; color:white;">⬇ PDF</button>
+                    <button class="btn-secondary" onclick="loadRequests()">Refresh</button>
                 </div>
-                <button class="btn-secondary" onclick="loadApprovalInbox()">Refresh Inbox</button>
             </div>
-            <div class="tablewrap" id="approvalTable">
-                Memuat inbox approval...
-            </div>
+            <p class="muted" style="margin-top: 0;">Klik nama produk untuk memperluas teks. Klik ID untuk proses kelanjutan.</p>
+            <div class="tablewrap" id="requestTable" style="background:#fff;">Memuat...</div>
         </div>
 
-        <!-- HALAMAN DETAIL (READ-ONLY) SAAT ID DIKLIK -->
+        <!-- Halaman Detail (Approval & Konfirmasi Terima) -->
         <div id="detailSection" class="card hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
-                <div>
-                    <h3 style="margin: 0; color: var(--navy);">Rincian Permintaan: <span id="detailDocId"></span></h3>
-                    <div class="muted" style="margin-top: 4px;">Status saat ini: <span id="detailStatusBadge" class="status"></span></div>
-                </div>
-                <button class="btn-secondary" onclick="navTo('previewSection', document.querySelector('.nav-btn:nth-child(4)'))">Kembali ke Tabel</button>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
+                <div><h3 style="margin: 0; color: var(--navy);">Rincian ID: <span id="detailDocId"></span></h3><div style="margin-top: 4px;"><span id="detailStatusBadge" class="status"></span></div></div>
+                <button class="btn-secondary" onclick="navTo('previewSection')">Kembali</button>
             </div>
+            
+            <div id="approvalHistory" style="margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 12px; font-family: monospace;"></div>
 
-            <div class="row">
-                <div><label>Tanggal Kebutuhan</label><input id="detailDate" type="text" disabled></div>
-                <div><label>Kategori Tujuan</label><input id="detailPurpose" type="text" disabled></div>
+            <div class="row" style="margin-top: 15px;">
+                <div><label>Tanggal</label><input id="detailDate" disabled></div>
+                <div><label>Kategori</label><input id="detailPurpose" disabled></div>
             </div>
+            <label>Penerima</label><input id="detailRecipient" disabled>
+            <label>Estimasi Biaya</label><input id="detailCost" disabled style="font-weight: bold; color: #c0392b;">
+            <label>Daftar Produk</label><div id="detailItemsContainer" style="margin-bottom: 20px;"></div>
 
-            <label>Customer / Project / Penerima</label>
-            <input id="detailRecipient" type="text" disabled>
-
-            <label>Tujuan / Keterangan Kebutuhan</label>
-            <textarea id="detailPurposeDetail" disabled></textarea>
-
-            <div class="row">
-                <div><label>Diajukan Oleh</label><input id="detailRequester" type="text" disabled></div>
-                <div><label>Waktu Pengajuan</label><input id="detailCreatedAt" type="text" disabled></div>
-            </div>
-
-            <h4 style="border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-top: 20px;">Daftar Produk yang Diminta</h4>
-            <div id="detailItemsContainer" style="margin-bottom: 20px;"></div>
-
-            <!-- Panel Tombol Aksi Approver -->
+            <!-- Area untuk Admin (Approval) -->
             <div id="detailApproverActions" class="hidden" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--line);">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn-action-approve" onclick="updateStatus(activeDocId, 'APPROVED')">Setujui (Approve)</button>
-                    <button class="btn-action-reject" onclick="updateStatus(activeDocId, 'REJECTED')">Tolak (Reject)</button>
-                    <span class="muted" style="font-size: 12px; margin-left: 10px;">Anda memiliki hak otorisasi untuk memproses permintaan ini.</span>
-                </div>
+                <button class="btn-action-approve" onclick="processApproval('APPROVED')">Setujui (Approve)</button>
+                <button class="btn-action-reject" onclick="processApproval('REJECTED')">Tolak (Reject)</button>
             </div>
-            <div id="detailNonApproverNotice" class="muted" style="margin-top: 20px; font-style: italic;">
-                * Data ini hanya dalam mode pratinjau (read-only).
+
+            <!-- Area untuk Requester (Konfirmasi Terima Barang) -->
+            <div id="detailRequesterActions" class="hidden" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--line);">
+                <p class="muted" style="margin-top:0;">Permintaan Anda telah disetujui. Apakah barang sampel sudah Anda terima?</p>
+                <button class="btn-blue" onclick="markAsReceived()">Tandai Barang Diterima</button>
             </div>
         </div>
+
+        <!-- Login / Register -->
+        <div id="welcomeSection" class="card text-center"><h2 style="color: var(--navy);">BISCUIT ADMIN</h2><p>Silakan Login di sidebar kiri.</p></div>
+        <div id="registerSection" class="card hidden" style="max-width: 400px;"><h2>Daftar</h2><input type="text" id="regName" placeholder="Nama"><input type="email" id="regEmail" placeholder="Email"><input type="password" id="regPassword" placeholder="Password"><button class="btn-gold" onclick="doRegister()">Daftar</button></div>
+        <div id="loginSection" class="card hidden" style="max-width: 400px;"><h2>Login</h2><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key === 'Enter') doLogin()"><button class="btn-gold" onclick="doLogin()">Masuk</button></div>
 
     </div>
 
     <script>
         const { Client, Account, Databases, ID, Query } = Appwrite;
-        const client = new Client()
-            .setEndpoint('https://sgp.cloud.appwrite.io/v1')
-            .setProject('6aea915d0004c5f2b544');
-
+        const client = new Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('6aea915d0004c5f2b544');
         const account = new Account(client);
         const databases = new Databases(client);
 
-        const dbId = '6aead82c000949827370';
-        const collId = '6aead90b001614a13561';
+        // --- GANTI ID DI BAWAH INI SESUAI PROJECT ANDA ---
+        const dbId = 'MASUKKAN_DATABASE_ID'; 
+        const collIdReq = 'MASUKKAN_ID_TABLE_REQUESTS'; 
+        const collIdProd = 'MASUKKAN_ID_TABLE_PRODUCTS';
 
-        // DAFTAR EMAIL APPROVER
-        const approverEmails = [
-            'admin@biscuit.com',
-            'williams.chandra@ot.id'
-        ];
+        const approverEmail = 'williams.chandra@ot.id';
+        let currentUser = null, isApprover = false, cachedDocs = [], masterProducts = [];
+        let activeDoc = null;
 
-        let currentUser = null;
-        let isApprover = false;
-        let cachedDocuments = [];
-        let activeDocId = null;
-
-        // Cek Sesi Login
+        // Inisialisasi Auth
         account.get().then(user => {
             currentUser = user;
-            isApprover = approverEmails.map(e => e.toLowerCase()).includes((user.email || '').toLowerCase());
-
+            isApprover = (user.email.toLowerCase() === approverEmail);
             document.getElementById('guestMenu').classList.add('hidden');
             document.getElementById('loggedInMenu').classList.remove('hidden');
+            document.getElementById('userNameDisplay').textContent = `${user.name} ${isApprover ? '(Admin)' : ''}`;
             
-            document.getElementById('userNameDisplay').textContent = `${user.name} ${isApprover ? '(Approver)' : ''}`;
-            document.getElementById('helloMsg').textContent = `Halo, ${user.name}. Ini ringkasan aktivitas Biscuit Admin.`;
-            
-            if (isApprover) {
-                document.getElementById('navApproval').classList.remove('hidden');
-            }
-
+            fetchMasterProducts();
             showSection('dashboardSection');
             addItem();
             loadRequests();
-        }).catch(() => {
-            showSection('welcomeSection');
-        });
+        }).catch(() => showSection('welcomeSection'));
 
-        function navTo(sectionId, btnElement) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            if(btnElement) btnElement.classList.add('active');
-            showSection(sectionId);
+        // Tarik Master Produk (untuk autocomplete dan harga)
+        function fetchMasterProducts() {
+            databases.listDocuments(dbId, collIdProd, [Query.limit(100)]).then(res => {
+                masterProducts = res.documents;
+                const dl = document.getElementById('productList');
+                dl.innerHTML = masterProducts.map(p => `<option value="${p.product_name}">`).join('');
+            }).catch(e => console.log("Master produk belum siap/kosong."));
         }
 
+        function navTo(secId, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            showSection(secId);
+        }
         function showSection(id) {
-            const sections = ['welcomeSection', 'loginSection', 'registerSection', 'dashboardSection', 'requestSection', 'previewSection', 'approvalSection', 'detailSection'];
-            sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
+            ['welcomeSection','loginSection','registerSection','dashboardSection','requestSection','previewSection','detailSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-
-            if(id === 'welcomeSection') { document.getElementById('navWelcome').classList.add('active'); document.getElementById('navLogin').classList.remove('active'); document.getElementById('navRegister').classList.remove('active');}
-            if(id === 'loginSection') { document.getElementById('navLogin').classList.add('active'); document.getElementById('navWelcome').classList.remove('active'); document.getElementById('navRegister').classList.remove('active');}
-            if(id === 'registerSection') { document.getElementById('navRegister').classList.add('active'); document.getElementById('navWelcome').classList.remove('active'); document.getElementById('navLogin').classList.remove('active');}
         }
 
-        // Tambah baris produk dengan input list="productList"
         function addItem() {
             const d = document.createElement('div');
             d.className = 'itemrow';
             d.innerHTML = `
-                <input class="itemSku" list="productList" type="text" placeholder="Ketik atau cari produk (Prod1, Prod2, Prod3)...">
+                <input class="itemSku" list="productList" type="text" placeholder="Nama Produk">
                 <input class="itemQty" type="number" min="1" value="1" placeholder="Qty">
+                <select class="itemUom"><option value="pcs">pcs</option><option value="krt">krt</option></select>
                 <button class="btn-secondary" style="color: #e74c3c;" onclick="this.parentElement.remove()">Hapus</button>
             `;
             document.getElementById('itemsContainer').appendChild(d);
         }
 
+        // Simpan Request dengan Kalkulasi Harga Pcs/Krt
         function submitRequest() {
-            const btn = document.getElementById('btnSubmitReq');
             const reqDate = document.getElementById('requiredDate').value;
             const recipient = document.getElementById('recipient').value;
+            if(!reqDate || !recipient) return alert("Isi tanggal & penerima!");
             
-            if(!reqDate || !recipient) return alert("Tanggal Kebutuhan dan Penerima wajib diisi!");
-            btn.textContent = 'Memproses Penyimpanan...';
-
+            let totalEst = 0;
             const itemsList = [...document.querySelectorAll('.itemrow')].map(r => {
-                return (r.querySelector('.itemSku').value || 'Produk') + " (" + r.querySelector('.itemQty').value + " pcs)";
+                const sku = r.querySelector('.itemSku').value || 'Unknown';
+                const qty = parseInt(r.querySelector('.itemQty').value) || 1;
+                const uom = r.querySelector('.itemUom').value;
+                
+                // Cari produk di master
+                const prodRef = masterProducts.find(p => p.product_name.toLowerCase() === sku.toLowerCase());
+                
+                // Asumsi: price = Harga 1 Karton, pcs = Isi pcs dalam 1 Karton
+                const hargaPerKarton = prodRef ? (prodRef.price || 0) : 0;
+                const isiPcsPerKarton = prodRef ? (prodRef.pcs || 1) : 1; // Default 1 agar tidak error bagi 0
+                
+                let itemCost = 0;
+                if (uom === 'krt') {
+                    itemCost = qty * hargaPerKarton;
+                } else if (uom === 'pcs') {
+                    itemCost = qty * (hargaPerKarton / isiPcsPerKarton);
+                }
+                totalEst += itemCost;
+
+                return `${sku} (${qty} ${uom})`;
             }).join(', ');
 
             const payload = {
@@ -332,223 +280,148 @@
                 recipient: recipient,
                 items_list: itemsList,
                 requester_name: currentUser.name,
-                status: 'PENDING'
+                status: 'PENDING',
+                total_estimation: totalEst
             };
 
-            databases.createDocument(dbId, collId, ID.unique(), payload)
-                .then(() => {
-                    alert('Permintaan berhasil disimpan ke sistem!');
-                    document.getElementById('purposeDetail').value = '';
-                    document.getElementById('recipient').value = '';
-                    document.getElementById('itemsContainer').innerHTML = '';
-                    addItem();
-                    btn.textContent = 'Kirim Permintaan';
-                    loadRequests();
-                })
-                .catch(err => { 
-                    alert('Gagal menyimpan: ' + err.message); 
-                    btn.textContent = 'Kirim Permintaan'; 
-                });
+            databases.createDocument(dbId, collIdReq, ID.unique(), payload).then(() => {
+                alert('Permintaan berhasil dikirim!');
+                document.getElementById('itemsContainer').innerHTML = '';
+                document.getElementById('purposeDetail').value = '';
+                document.getElementById('recipient').value = '';
+                addItem();
+                loadRequests();
+            }).catch(e => alert(e.message));
         }
 
-        // BUKA RINCIAN PERMINTAAN SAAT ID DIKLIK
+        // Tarik Data Permintaan
+        function loadRequests() {
+            databases.listDocuments(dbId, collIdReq, [Query.orderDesc('$createdAt')]).then(res => {
+                cachedDocs = res.documents;
+                document.getElementById('metricTotal').textContent = res.total;
+                
+                let sumCost = 0;
+                res.documents.forEach(d => sumCost += (d.total_estimation || 0));
+                document.getElementById('metricCost').textContent = "Rp " + sumCost.toLocaleString('id-ID');
+                
+                document.getElementById('metricPending').textContent = res.documents.filter(d => d.status.includes('PENDING') || d.status.includes('APPV_1')).length;
+                // Hitung yang sudah Approved ATAU sudah Received
+                document.getElementById('metricApproved').textContent = res.documents.filter(d => d.status === 'APPROVED' || d.status === 'RECEIVED').length;
+
+                const rows = res.documents.map(r => {
+                    return `
+                        <tr>
+                            <td class="col-id"><span class="id-link" onclick="openDetail('${r.$id}')">${r.$id.substring(0,6).toUpperCase()}</span></td>
+                            <td>${r.required_date}</td>
+                            <td>${r.requester_name}</td>
+                            <td class="col-kategori">${r.purpose_category}</td>
+                            <td>${r.recipient}</td>
+                            <td class="col-detail"><span class="prod-cell" onclick="this.classList.toggle('expanded')">${r.items_list}</span></td>
+                            <td><span class="status status-${r.status}">${r.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                document.getElementById('requestTable').innerHTML = `
+                    <table id="tblExport">
+                        <thead><tr><th class="col-id">ID</th><th>Tgl Butuh</th><th>Pemohon</th><th class="col-kategori">Kategori</th><th>Penerima</th><th class="col-detail">Detail Produk (Klik)</th><th>Status</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            });
+        }
+
         function openDetail(docId) {
-            const doc = cachedDocuments.find(d => d.$id === docId);
-            if (!doc) return;
+            activeDoc = cachedDocs.find(d => d.$id === docId);
+            document.getElementById('detailDocId').textContent = activeDoc.$id.substring(0,6).toUpperCase();
+            document.getElementById('detailDate').value = activeDoc.required_date;
+            document.getElementById('detailPurpose').value = activeDoc.purpose_category;
+            document.getElementById('detailRecipient').value = activeDoc.recipient;
+            document.getElementById('detailCost').value = "Rp " + (activeDoc.total_estimation || 0).toLocaleString('id-ID');
+            document.getElementById('detailStatusBadge').className = `status status-${activeDoc.status}`;
+            document.getElementById('detailStatusBadge').textContent = activeDoc.status;
+            
+            document.getElementById('detailItemsContainer').innerHTML = activeDoc.items_list.split(', ').map(i => `<input type="text" value="${i}" disabled style="margin-bottom:5px;">`).join('');
 
-            activeDocId = docId;
-            document.getElementById('detailDocId').textContent = doc.$id.substring(0,6).toUpperCase();
-            document.getElementById('detailDate').value = doc.required_date || '-';
-            document.getElementById('detailPurpose').value = doc.purpose_category || '-';
-            document.getElementById('detailRecipient').value = doc.recipient || '-';
-            document.getElementById('detailPurposeDetail').value = doc.purpose_detail || '-';
-            document.getElementById('detailRequester').value = doc.requester_name || '-';
-            document.getElementById('detailCreatedAt').value = new Date(doc.$createdAt).toLocaleString('id-ID');
+            let hist = `Input: ${new Date(activeDoc.$createdAt).toLocaleString('id-ID')}<br>`;
+            if(activeDoc.appv1_time) hist += `Approve 1: ${activeDoc.appv1_time}<br>`;
+            if(activeDoc.appv2_time) hist += `Approve Final: ${activeDoc.appv2_time}`;
+            document.getElementById('approvalHistory').innerHTML = hist;
 
-            // Format status badge
-            const statusBadge = document.getElementById('detailStatusBadge');
-            const curStatus = (doc.status || 'PENDING').toUpperCase();
-            statusBadge.className = `status status-${curStatus}`;
-            statusBadge.textContent = curStatus;
-
-            // Render daftar produk dalam bentuk form read-only
-            const items = (doc.items_list || '').split(', ');
-            document.getElementById('detailItemsContainer').innerHTML = items.map(item => `
-                <div style="margin-bottom: 6px;">
-                    <input type="text" value="${item}" disabled style="background: #f8fafc; font-weight: 500;">
-                </div>
-            `).join('');
-
-            // Tampilkan tombol approve/reject hanya jika user adalah Approver dan status masih PENDING
-            const actionContainer = document.getElementById('detailApproverActions');
-            if (isApprover && curStatus === 'PENDING') {
-                actionContainer.classList.remove('hidden');
+            // Tombol Admin (Approval)
+            const actsAdmin = document.getElementById('detailApproverActions');
+            if (isApprover && activeDoc.status !== 'APPROVED' && activeDoc.status !== 'REJECTED' && activeDoc.status !== 'RECEIVED') {
+                actsAdmin.classList.remove('hidden');
             } else {
-                actionContainer.classList.add('hidden');
+                actsAdmin.classList.add('hidden');
+            }
+
+            // Tombol Requester (Barang Diterima)
+            const actsReq = document.getElementById('detailRequesterActions');
+            if (activeDoc.requester_name === currentUser.name && activeDoc.status === 'APPROVED') {
+                actsReq.classList.remove('hidden');
+            } else {
+                actsReq.classList.add('hidden');
             }
 
             showSection('detailSection');
         }
 
-        function updateStatus(docId, newStatus) {
-            if (!isApprover) {
-                return alert("Akses ditolak: Akun Anda tidak memiliki hak otorisasi.");
+        // Logika 2-Tier Approval (Khusus Admin)
+        function processApproval(keputusan) {
+            if(!isApprover) return;
+            let updates = {};
+            const waktuSkrg = new Date().toLocaleString('id-ID');
+
+            if (keputusan === 'REJECTED') {
+                updates = { status: 'REJECTED' };
+            } else if (keputusan === 'APPROVED') {
+                if (activeDoc.status === 'PENDING') {
+                    updates = { status: 'APPV_1', appv1_time: waktuSkrg };
+                } else if (activeDoc.status === 'APPV_1') {
+                    updates = { status: 'APPROVED', appv2_time: waktuSkrg };
+                }
             }
 
-            const konfirmasi = confirm(`Apakah Anda yakin ingin menandai permintaan ini sebagai ${newStatus}?`);
-            if (!konfirmasi) return;
-
-            databases.updateDocument(dbId, collId, docId, { status: newStatus })
-                .then(() => {
-                    alert(`Permintaan berhasil diperbarui menjadi ${newStatus}!`);
-                    loadRequests();
-                    openDetail(docId); // Segarkan tampilan detail yang sedang dibuka
-                })
-                .catch(err => {
-                    alert('Gagal mengupdate status: ' + err.message);
-                });
+            databases.updateDocument(dbId, collIdReq, activeDoc.$id, updates).then(() => {
+                alert(`Data diperbarui menjadi ${updates.status}`);
+                loadRequests();
+                openDetail(activeDoc.$id); 
+            });
         }
 
-        // Tarik Semua Data & Simpan ke Cache
-        function loadRequests() {
-            databases.listDocuments(dbId, collId, [Query.orderDesc('$createdAt')])
-                .then(res => {
-                    cachedDocuments = res.documents;
-                    document.getElementById('metricTotal').textContent = res.total;
-                    
-                    const pendingList = res.documents.filter(d => (d.status || '').toUpperCase() === 'PENDING');
-                    const approvedList = res.documents.filter(d => (d.status || '').toUpperCase() === 'APPROVED');
-                    
-                    document.getElementById('metricPending').textContent = pendingList.length;
-                    document.getElementById('metricApproved').textContent = approvedList.length;
+        // Logika Barang Diterima (Khusus Pemohon)
+        function markAsReceived() {
+            const konfirmasi = confirm("Apakah Anda yakin barang untuk request ini sudah Anda terima?");
+            if(!konfirmasi) return;
 
-                    if(res.documents.length === 0) {
-                        document.getElementById('requestTable').innerHTML = '<p>Belum ada data permintaan.</p>';
-                        return;
-                    }
-                    
-                    const rows = res.documents.map(r => {
-                        const createdAt = new Date(r.$createdAt).toLocaleString('id-ID');
-                        const statusClass = `status-${(r.status || 'PENDING').toUpperCase()}`;
-                        
-                        let actionButtons = '-';
-                        if (isApprover && (r.status || '').toUpperCase() === 'PENDING') {
-                            actionButtons = `
-                                <button class="btn-action-approve" onclick="updateStatus('${r.$id}', 'APPROVED')">Approve</button>
-                                <button class="btn-action-reject" onclick="updateStatus('${r.$id}', 'REJECTED')">Reject</button>
-                            `;
-                        } else if ((r.status || '').toUpperCase() !== 'PENDING') {
-                            actionButtons = `<small class="muted">Selesai</small>`;
-                        }
-
-                        return `
-                            <tr>
-                                <td><span class="id-link" onclick="openDetail('${r.$id}')">${r.$id.substring(0,6).toUpperCase()}</span></td>
-                                <td>${r.required_date}</td>
-                                <td>${r.requester_name}</td>
-                                <td>${r.purpose_category}</td>
-                                <td>${r.recipient}</td>
-                                <td>${r.items_list}</td>
-                                <td>${createdAt}</td>
-                                <td><span class="status ${statusClass}">${r.status}</span></td>
-                                <td>${actionButtons}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                    
-                    document.getElementById('requestTable').innerHTML = `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID (Klik Detail)</th>
-                                    <th>Tgl Butuh</th>
-                                    <th>Diajukan Oleh</th>
-                                    <th>Kategori</th>
-                                    <th>Penerima</th>
-                                    <th>Detail Produk</th>
-                                    <th>Waktu Input</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                        </table>`;
-                })
-                .catch(err => {
-                    document.getElementById('requestTable').innerHTML = `<p style="color:red;">Gagal memuat: ${err.message}</p>`;
-                });
+            databases.updateDocument(dbId, collIdReq, activeDoc.$id, { status: 'RECEIVED' }).then(() => {
+                alert("Status berhasil diubah menjadi Barang Diterima!");
+                loadRequests();
+                openDetail(activeDoc.$id);
+            }).catch(e => alert("Gagal mengupdate status: " + e.message));
         }
 
-        function loadApprovalInbox() {
-            if (!isApprover) return;
-
-            databases.listDocuments(dbId, collId, [Query.equal('status', 'PENDING'), Query.orderDesc('$createdAt')])
-                .then(res => {
-                    if (res.documents.length === 0) {
-                        document.getElementById('approvalTable').innerHTML = '<p class="muted">Tidak ada permintaan yang menunggu approval saat ini.</p>';
-                        return;
-                    }
-
-                    const rows = res.documents.map(r => {
-                        const createdAt = new Date(r.$createdAt).toLocaleString('id-ID');
-                        return `
-                            <tr>
-                                <td><span class="id-link" onclick="openDetail('${r.$id}')">${r.$id.substring(0,6).toUpperCase()}</span></td>
-                                <td>${r.required_date}</td>
-                                <td>${r.requester_name}</td>
-                                <td>${r.purpose_category}</td>
-                                <td>${r.recipient}</td>
-                                <td>${r.items_list}</td>
-                                <td>${r.purpose_detail || '-'}</td>
-                                <td>${createdAt}</td>
-                                <td>
-                                    <button class="btn-action-approve" onclick="updateStatus('${r.$id}', 'APPROVED')">Approve</button>
-                                    <button class="btn-action-reject" onclick="updateStatus('${r.$id}', 'REJECTED')">Reject</button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-
-                    document.getElementById('approvalTable').innerHTML = `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID (Klik Detail)</th>
-                                    <th>Tgl Butuh</th>
-                                    <th>Diajukan Oleh</th>
-                                    <th>Kategori</th>
-                                    <th>Penerima</th>
-                                    <th>Produk</th>
-                                    <th>Keterangan</th>
-                                    <th>Waktu Submit</th>
-                                    <th>Keputusan</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                        </table>`;
-                })
-                .catch(err => {
-                    document.getElementById('approvalTable').innerHTML = `<p style="color:red;">Gagal memuat inbox: ${err.message}</p>`;
-                });
+        // --- Fitur Export ---
+        function exportExcel() {
+            let table = document.getElementById("tblExport");
+            let wb = XLSX.utils.table_to_book(table, {sheet:"Data Permintaan"});
+            XLSX.writeFile(wb, "Data_Permintaan.xlsx");
         }
 
+        function exportPDF() {
+            const elem = document.getElementById('tblExport');
+            const opt = { margin: 0.5, filename: 'Data_Permintaan.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
+            html2pdf().set(opt).from(elem).save();
+        }
+
+        // Auth
         function doRegister() {
-            const n = document.getElementById('regName').value, e = document.getElementById('regEmail').value, p = document.getElementById('regPassword').value;
-            if(p.length < 8) return alert('Password harus minimal 8 karakter!');
-            account.create(ID.unique(), e, p, n)
-                .then(() => { alert('Pendaftaran sukses! Silakan login.'); showSection('loginSection'); })
-                .catch(e => alert(e.message));
+            const n=document.getElementById('regName').value, e=document.getElementById('regEmail').value, p=document.getElementById('regPassword').value;
+            if(p.length<8) return alert('Password minimal 8 karakter!');
+            account.create(ID.unique(), e, p, n).then(() => { alert('Sukses! Silakan login.'); showSection('loginSection'); }).catch(e => alert(e.message));
         }
-
-        function doLogin() {
-            account.createEmailPasswordSession(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
-                .then(() => window.location.reload())
-                .catch(e => alert('Gagal Login: Periksa email dan password Anda.'));
-        }
-
-        document.getElementById('logoutBtn').onclick = () => {
-            account.deleteSession('current').then(() => window.location.reload());
-        };
+        function doLogin() { account.createEmailPasswordSession(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).then(() => window.location.reload()).catch(e => alert('Email/Password salah!')); }
+        document.getElementById('logoutBtn').onclick = () => account.deleteSession('current').then(() => window.location.reload());
     </script>
 </body>
 </html>
