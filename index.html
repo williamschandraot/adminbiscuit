@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Internal</title>
-    <!-- Memanggil library Appwrite langsung dari CDN -->
+    <!-- Memanggil library Appwrite -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <style>
         body {
@@ -12,57 +12,87 @@
             margin: 0;
             background-color: #f4f7f6;
             color: #333;
+            display: flex; /* Membagi layar menjadi kolom */
+            min-height: 100vh;
         }
 
-        /* Navigasi Bar */
-        .navbar {
+        /* 1. Desain Sidebar Kiri */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: white;
-            padding: 15px 40px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
-        .navbar h2 { margin: 0; color: #2c3e50; }
         
-        .nav-buttons {
-            display: flex;
-            align-items: center;
+        .sidebar h2 {
+            margin-top: 0;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #34495e;
+            text-align: center;
         }
-        .nav-buttons button {
-            margin-left: 10px;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-login-nav { background-color: #ecf0f1; color: #2c3e50; }
-        .btn-register-nav { background-color: #4285F4; color: white; }
-        .btn-logout { background-color: #e74c3c; color: white; }
-        .btn-logout:hover { background-color: #c0392b; }
 
         .welcome-text {
+            color: #1abc9c;
             font-weight: bold;
-            color: #2c3e50;
-            margin-right: 15px;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
-        /* Kotak Konten Utama */
+        /* Tombol di dalam Sidebar */
+        .sidebar button {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: transparent;
+            color: #ecf0f1;
+            border: none;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .sidebar button:hover {
+            background-color: #34495e;
+            padding-left: 20px; /* Efek geser saat disorot */
+        }
+        
+        .btn-logout { background-color: #e74c3c !important; color: white !important; margin-top: 20px; text-align: center !important; }
+        .btn-logout:hover { background-color: #c0392b !important; padding-left: 15px !important; }
+        
+        .btn-primary { background-color: #4285F4 !important; text-align: center !important;}
+        .btn-primary:hover { background-color: #357ae8 !important; padding-left: 15px !important; }
+
+        /* 2. Desain Area Konten Kanan */
+        .main-content {
+            flex: 1; /* Mengambil sisa ruang layar */
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Menengahkan form */
+        }
+
         .container {
-            max-width: 400px;
-            margin: 80px auto;
+            width: 100%;
+            max-width: 450px;
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
         }
-        
-        /* Class khusus untuk menyembunyikan elemen */
+
+        /* Container khusus dashboard (lebih lebar) */
+        .dashboard-container {
+            max-width: 800px;
+            text-align: left;
+        }
+
         .hidden { display: none !important; }
 
-        /* Gaya Form Input & Tombol Submit */
+        /* Gaya Form */
         input {
             width: 100%;
             padding: 12px;
@@ -88,60 +118,71 @@
 </head>
 <body>
 
-    <!-- AREA NAVIGASI ATAS -->
-    <div class="navbar">
+    <!-- SIDEBAR KIRI -->
+    <div class="sidebar">
         <h2>Sistem Internal</h2>
         
-        <!-- Menu ini tampil untuk user yang BELUM login (Guest) -->
-        <div id="guestMenu" class="nav-buttons">
-            <button id="showLoginBtn" class="btn-login-nav">Login</button>
-            <button id="showRegisterBtn" class="btn-register-nav">Register</button>
+        <!-- Menu Guest (Belum Login) -->
+        <div id="guestMenu">
+            <button id="showLoginBtn">Form Login</button>
+            <button id="showRegisterBtn" class="btn-primary">Register Akun Baru</button>
         </div>
 
-        <!-- Menu ini tampil untuk user yang SUDAH login -->
-        <div id="loggedInMenu" class="nav-buttons hidden">
-            <span class="welcome-text">Welcome, <span id="userNameDisplay"></span> !</span>
+        <!-- Menu Internal (Sudah Login) -->
+        <div id="loggedInMenu" class="hidden">
+            <div class="welcome-text">Welcome, <span id="userNameDisplay"></span> !</div>
+            
+            <button class="menu-btn">Menu 1</button>
+            <button class="menu-btn">Menu 2</button>
+            <button class="menu-btn">Menu 3</button>
+            <button class="menu-btn">Menu 4</button>
+            <button class="menu-btn">Menu 5</button>
+            
             <button id="logoutBtn" class="btn-logout">Logout</button>
         </div>
     </div>
 
-    <!-- HALAMAN SAMBUTAN (DEFAULT) -->
-    <div id="welcomeSection" class="container">
-        <h3>Selamat Datang</h3>
-        <p>Silakan klik Login atau Register di sudut kanan atas untuk masuk ke sistem.</p>
+    <!-- AREA KONTEN KANAN -->
+    <div class="main-content">
+        
+        <!-- Halaman Sambutan Awal -->
+        <div id="welcomeSection" class="container text-center">
+            <h3 style="text-align: center;">Selamat Datang</h3>
+            <p style="text-align: center;">Silakan klik tombol di menu sebelah kiri untuk masuk ke dalam sistem perusahaan.</p>
+        </div>
+
+        <!-- Halaman Dashboard (Berubah saat menu 1-5 diklik) -->
+        <div id="dashboardSection" class="container dashboard-container hidden">
+            <h3 id="dashboardTitle">Dashboard Utama</h3>
+            <p id="dashboardContent">Anda telah berhasil masuk ke dalam sistem. Silakan pilih menu di sebelah kiri untuk mengelola data.</p>
+        </div>
+
+        <!-- Form Register -->
+        <div id="registerSection" class="container hidden">
+            <h3 style="text-align: center;">Pendaftaran Akun</h3>
+            <input type="text" id="regName" placeholder="Nama Lengkap" required>
+            <input type="text" id="regUsername" placeholder="Username" required>
+            <input type="email" id="regEmail" placeholder="Alamat Email" required>
+            <input type="password" id="regPassword" placeholder="Password (Min. 8 karakter)" required>
+            <button id="doRegisterBtn" class="btn-submit">Daftar Sekarang</button>
+        </div>
+
+        <!-- Form Login -->
+        <div id="loginSection" class="container hidden">
+            <h3 style="text-align: center;">Login Sistem</h3>
+            <input type="text" id="loginId" placeholder="Email (Wajib gunakan Email)" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button id="doLoginBtn" class="btn-submit">Masuk</button>
+        </div>
+
     </div>
 
-    <!-- HALAMAN DASHBOARD (TAMPIL SETELAH LOGIN) -->
-    <div id="dashboardSection" class="container hidden">
-        <h3>Dashboard Internal</h3>
-        <p>Selamat! Anda telah berhasil masuk ke dalam sistem web internal.</p>
-    </div>
-
-    <!-- FORM REGISTER -->
-    <div id="registerSection" class="container hidden">
-        <h3>Pendaftaran Akun Baru</h3>
-        <input type="text" id="regName" placeholder="Nama Lengkap" required>
-        <input type="text" id="regUsername" placeholder="Username" required>
-        <input type="email" id="regEmail" placeholder="Alamat Email" required>
-        <input type="password" id="regPassword" placeholder="Password (Min. 8 karakter)" required>
-        <button id="doRegisterBtn" class="btn-submit">Daftar Sekarang</button>
-    </div>
-
-    <!-- FORM LOGIN -->
-    <div id="loginSection" class="container hidden">
-        <h3>Login Sistem</h3>
-        <input type="text" id="loginId" placeholder="Email (Wajib gunakan Email)" required>
-        <input type="password" id="loginPassword" placeholder="Password" required>
-        <button id="doLoginBtn" class="btn-submit">Masuk</button>
-    </div>
-
-    <!-- SCRIPT LOGIKA APPWRITE -->
     <script>
         // 1. Inisialisasi Koneksi ke Appwrite
         const { Client, Account, ID } = Appwrite;
         const client = new Client()
-            .setEndpoint('[https://sgp.cloud.appwrite.io/v1](https://sgp.cloud.appwrite.io/v1)')
-            .setProject('6aea915d0004c5f2b544'); // << GANTI BAGIAN INI
+            .setEndpoint('https://sgp.cloud.appwrite.io/v1') // Pastikan tetap 'sgp'
+            .setProject('ISI_DENGAN_PROJECT_ID_APPWRITE_ANDA'); // << GANTI DENGAN PROJECT ID ANDA
 
         const account = new Account(client);
 
@@ -155,29 +196,28 @@
         const loggedInMenu = document.getElementById('loggedInMenu');
         const userNameDisplay = document.getElementById('userNameDisplay');
 
-        // 3. Cek Status Login (Berjalan otomatis saat halaman dibuka)
+        // 3. Cek Status Login
         account.get()
             .then(function (user) {
-                // JIKA USER SUDAH LOGIN:
+                // JIKA SUDAH LOGIN
                 guestMenu.classList.add('hidden');
                 loggedInMenu.classList.remove('hidden');
                 
-                // Sembunyikan semua form, tampilkan halaman dashboard
                 welcomeSec.classList.add('hidden');
                 loginSec.classList.add('hidden');
                 registerSec.classList.add('hidden');
                 dashboardSec.classList.remove('hidden');
 
-                // Menampilkan nama di kanan atas (Memotong username yang ada di dalam kurung)
                 const fullName = user.name;
                 const justName = fullName.split(' (')[0]; 
                 userNameDisplay.textContent = justName;
             })
             .catch(function (error) {
-                // JIKA BELUM LOGIN: biarkan tampilan default (muncul tombol login/register)
+                // JIKA BELUM LOGIN
+                // Biarkan tampilan menu guest
             });
 
-        // 4. Logika Ganti Halaman Form (Untuk tombol di Navigasi)
+        // 4. Logika Tampilkan Form (Guest)
         document.getElementById('showLoginBtn').addEventListener('click', () => {
             welcomeSec.classList.add('hidden'); 
             registerSec.classList.add('hidden'); 
@@ -190,7 +230,20 @@
             registerSec.classList.remove('hidden');
         });
 
-        // 5. Logika Tombol Register (Menyimpan Akun)
+        // 5. Logika Menu 1 sampai 5
+        const menuBtns = document.querySelectorAll('.menu-btn');
+        const dashboardTitle = document.getElementById('dashboardTitle');
+        const dashboardContent = document.getElementById('dashboardContent');
+
+        menuBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const menuName = e.target.textContent;
+                dashboardTitle.textContent = "Halaman " + menuName;
+                dashboardContent.textContent = "Ini adalah area untuk " + menuName + ". Nantinya Anda bisa meletakkan form, tabel database, atau grafik di sini.";
+            });
+        });
+
+        // 6. Logika Proses Register
         document.getElementById('doRegisterBtn').addEventListener('click', () => {
             const name = document.getElementById('regName').value;
             const username = document.getElementById('regUsername').value;
@@ -202,14 +255,11 @@
                 return;
             }
 
-            // Menggabungkan nama dan username agar data username tidak hilang
             const combinedName = `${name} (${username})`;
 
-            // Mengirim data ke Appwrite
             account.create(ID.unique(), email, password, combinedName)
                 .then(() => {
                     alert('Registrasi berhasil! Silakan login menggunakan Email dan Password Anda.');
-                    // Memaksa pindah ke halaman login
                     document.getElementById('showLoginBtn').click();
                 })
                 .catch(error => {
@@ -217,33 +267,29 @@
                 });
         });
 
-        // 6. Logika Tombol Login (Masuk ke Sistem)
+        // 7. Logika Proses Login
         document.getElementById('doLoginBtn').addEventListener('click', () => {
             const loginId = document.getElementById('loginId').value;
             const password = document.getElementById('loginPassword').value;
 
-            // Pengecekan keamanan dasar format email
             if (!loginId.includes('@')) {
                 alert('Sistem saat ini mewajibkan penggunaan Email untuk Login. Silakan masukkan alamat Email Anda.');
                 return;
             }
 
-            // Memvalidasi email dan password ke Appwrite
             account.createEmailPasswordSession(loginId, password)
                 .then(() => {
-                    // Jika berhasil, refresh / muat ulang web agar web mendeteksi status "sudah login"
                     window.location.reload();
                 })
                 .catch(error => {
-                    alert('Login gagal. Cek kembali Email dan Password Anda. Detail: ' + error.message);
+                    alert('Login gagal. Cek kembali Email dan Password Anda.');
                 });
         });
 
-        // 7. Logika Tombol Logout (Keluar dari Sistem)
+        // 8. Logika Proses Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
             account.deleteSession('current')
                 .then(() => {
-                    // Jika berhasil logout, refresh / muat ulang web
                     window.location.reload();
                 });
         });
