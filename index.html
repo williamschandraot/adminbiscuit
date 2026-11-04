@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Internal</title>
-    <!-- Memanggil library Appwrite -->
+    <!-- Memanggil library Appwrite langsung dari CDN -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <style>
         body {
@@ -24,6 +24,11 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .navbar h2 { margin: 0; color: #2c3e50; }
+        
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+        }
         .nav-buttons button {
             margin-left: 10px;
             padding: 8px 20px;
@@ -54,9 +59,10 @@
             text-align: center;
         }
         
+        /* Class khusus untuk menyembunyikan elemen */
         .hidden { display: none !important; }
 
-        /* Gaya Form */
+        /* Gaya Form Input & Tombol Submit */
         input {
             width: 100%;
             padding: 12px;
@@ -77,40 +83,41 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        .btn-submit:hover { background-color: #27ae60; }
     </style>
 </head>
 <body>
 
-    <!-- Area Navigasi Atas -->
+    <!-- AREA NAVIGASI ATAS -->
     <div class="navbar">
         <h2>Sistem Internal</h2>
         
-        <!-- Menu untuk user yang BELUM login -->
+        <!-- Menu ini tampil untuk user yang BELUM login (Guest) -->
         <div id="guestMenu" class="nav-buttons">
             <button id="showLoginBtn" class="btn-login-nav">Login</button>
             <button id="showRegisterBtn" class="btn-register-nav">Register</button>
         </div>
 
-        <!-- Menu untuk user yang SUDAH login -->
+        <!-- Menu ini tampil untuk user yang SUDAH login -->
         <div id="loggedInMenu" class="nav-buttons hidden">
             <span class="welcome-text">Welcome, <span id="userNameDisplay"></span> !</span>
             <button id="logoutBtn" class="btn-logout">Logout</button>
         </div>
     </div>
 
-    <!-- Halaman Sambutan -->
+    <!-- HALAMAN SAMBUTAN (DEFAULT) -->
     <div id="welcomeSection" class="container">
         <h3>Selamat Datang</h3>
         <p>Silakan klik Login atau Register di sudut kanan atas untuk masuk ke sistem.</p>
     </div>
 
-    <!-- Halaman Dashboard (Setelah Login) -->
+    <!-- HALAMAN DASHBOARD (TAMPIL SETELAH LOGIN) -->
     <div id="dashboardSection" class="container hidden">
         <h3>Dashboard Internal</h3>
-        <p>Anda telah berhasil masuk ke dalam sistem.</p>
+        <p>Selamat! Anda telah berhasil masuk ke dalam sistem web internal.</p>
     </div>
 
-    <!-- Form Register -->
+    <!-- FORM REGISTER -->
     <div id="registerSection" class="container hidden">
         <h3>Pendaftaran Akun Baru</h3>
         <input type="text" id="regName" placeholder="Nama Lengkap" required>
@@ -120,63 +127,70 @@
         <button id="doRegisterBtn" class="btn-submit">Daftar Sekarang</button>
     </div>
 
-    <!-- Form Login -->
+    <!-- FORM LOGIN -->
     <div id="loginSection" class="container hidden">
         <h3>Login Sistem</h3>
-        <input type="text" id="loginId" placeholder="Email (Wajib Email)" required>
+        <input type="text" id="loginId" placeholder="Email (Wajib gunakan Email)" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button id="doLoginBtn" class="btn-submit">Masuk</button>
     </div>
 
+    <!-- SCRIPT LOGIKA APPWRITE -->
     <script>
-        // 1. Inisialisasi Appwrite
+        // 1. Inisialisasi Koneksi ke Appwrite
         const { Client, Account, ID } = Appwrite;
         const client = new Client()
             .setEndpoint('https://cloud.appwrite.io/v1')
-            .setProject('ISI_DENGAN_PROJECT_ID_APPWRITE_ANDA'); // Ganti dengan Project ID Anda
+            .setProject('ISI_DENGAN_PROJECT_ID_APPWRITE_ANDA'); // << GANTI BAGIAN INI
 
         const account = new Account(client);
 
-        // 2. Deklarasi Elemen
+        // 2. Deklarasi Elemen-elemen HTML
         const welcomeSec = document.getElementById('welcomeSection');
         const loginSec = document.getElementById('loginSection');
         const registerSec = document.getElementById('registerSection');
         const dashboardSec = document.getElementById('dashboardSection');
+        
         const guestMenu = document.getElementById('guestMenu');
         const loggedInMenu = document.getElementById('loggedInMenu');
         const userNameDisplay = document.getElementById('userNameDisplay');
 
-        // 3. Cek Status Login Saat Halaman Dimuat
+        // 3. Cek Status Login (Berjalan otomatis saat halaman dibuka)
         account.get()
             .then(function (user) {
-                // JIKA SUDAH LOGIN:
+                // JIKA USER SUDAH LOGIN:
                 guestMenu.classList.add('hidden');
                 loggedInMenu.classList.remove('hidden');
                 
-                // Menyembunyikan form, menampilkan dashboard
+                // Sembunyikan semua form, tampilkan halaman dashboard
                 welcomeSec.classList.add('hidden');
                 loginSec.classList.add('hidden');
                 registerSec.classList.add('hidden');
                 dashboardSec.classList.remove('hidden');
 
-                // Mengambil nama depan (karena kita simpan format: Nama (Username))
+                // Menampilkan nama di kanan atas (Memotong username yang ada di dalam kurung)
                 const fullName = user.name;
-                const justName = fullName.split(' (')[0]; // Memotong bagian username
+                const justName = fullName.split(' (')[0]; 
                 userNameDisplay.textContent = justName;
             })
             .catch(function (error) {
-                // JIKA BELUM LOGIN: biarkan tampilan default (halaman sambutan)
+                // JIKA BELUM LOGIN: biarkan tampilan default (muncul tombol login/register)
             });
 
-        // 4. Logika Navigasi (Untuk Guest)
+        // 4. Logika Ganti Halaman Form (Untuk tombol di Navigasi)
         document.getElementById('showLoginBtn').addEventListener('click', () => {
-            welcomeSec.classList.add('hidden'); registerSec.classList.add('hidden'); loginSec.classList.remove('hidden');
-        });
-        document.getElementById('showRegisterBtn').addEventListener('click', () => {
-            welcomeSec.classList.add('hidden'); loginSec.classList.add('hidden'); registerSec.classList.remove('hidden');
+            welcomeSec.classList.add('hidden'); 
+            registerSec.classList.add('hidden'); 
+            loginSec.classList.remove('hidden');
         });
 
-        // 5. Logika Register
+        document.getElementById('showRegisterBtn').addEventListener('click', () => {
+            welcomeSec.classList.add('hidden'); 
+            loginSec.classList.add('hidden'); 
+            registerSec.classList.remove('hidden');
+        });
+
+        // 5. Logika Tombol Register (Menyimpan Akun)
         document.getElementById('doRegisterBtn').addEventListener('click', () => {
             const name = document.getElementById('regName').value;
             const username = document.getElementById('regUsername').value;
@@ -188,39 +202,48 @@
                 return;
             }
 
+            // Menggabungkan nama dan username agar data username tidak hilang
             const combinedName = `${name} (${username})`;
 
+            // Mengirim data ke Appwrite
             account.create(ID.unique(), email, password, combinedName)
                 .then(() => {
-                    alert('Registrasi berhasil! Silakan login.');
+                    alert('Registrasi berhasil! Silakan login menggunakan Email dan Password Anda.');
+                    // Memaksa pindah ke halaman login
                     document.getElementById('showLoginBtn').click();
                 })
-                .catch(error => alert('Registrasi gagal: ' + error.message));
+                .catch(error => {
+                    alert('Registrasi gagal: ' + error.message);
+                });
         });
 
-        // 6. Logika Login
+        // 6. Logika Tombol Login (Masuk ke Sistem)
         document.getElementById('doLoginBtn').addEventListener('click', () => {
             const loginId = document.getElementById('loginId').value;
             const password = document.getElementById('loginPassword').value;
 
+            // Pengecekan keamanan dasar format email
             if (!loginId.includes('@')) {
-                alert('Silakan masukkan Email yang terdaftar, bukan Username.');
+                alert('Sistem saat ini mewajibkan penggunaan Email untuk Login. Silakan masukkan alamat Email Anda.');
                 return;
             }
 
+            // Memvalidasi email dan password ke Appwrite
             account.createEmailPasswordSession(loginId, password)
                 .then(() => {
-                    // Jika login berhasil, refresh halaman agar status login terdeteksi di atas
+                    // Jika berhasil, refresh / muat ulang web agar web mendeteksi status "sudah login"
                     window.location.reload();
                 })
-                .catch(error => alert('Login gagal: ' + error.message));
+                .catch(error => {
+                    alert('Login gagal. Cek kembali Email dan Password Anda. Detail: ' + error.message);
+                });
         });
 
-        // 7. Logika Logout
+        // 7. Logika Tombol Logout (Keluar dari Sistem)
         document.getElementById('logoutBtn').addEventListener('click', () => {
             account.deleteSession('current')
                 .then(() => {
-                    // Refresh halaman setelah logout
+                    // Jika berhasil logout, refresh / muat ulang web
                     window.location.reload();
                 });
         });
