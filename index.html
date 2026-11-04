@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biscuit Admin - Portal</title>
+    <!-- Library Appwrite, Excel, dan PDF -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
-    <!-- Library untuk Export Excel & PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -14,7 +14,7 @@
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; background-color: var(--bg); color: var(--ink); display: flex; min-height: 100vh; font-size: 14px; }
 
-        /* Sidebar Kiri */
+        /* Sidebar */
         .sidebar { width: 250px; background-color: var(--navy); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 10; }
         .sidebar h2 { margin-top: 0; padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; font-size: 19px; }
         .welcome-text { color: var(--gold); font-weight: bold; text-align: center; margin-bottom: 20px; font-size: 14px; }
@@ -22,7 +22,7 @@
         .sidebar button:hover, .sidebar button.active { background-color: var(--gold); color: #172b45; padding-left: 20px; }
         .btn-logout { background-color: #e74c3c !important; color: white !important; margin-top: auto; text-align: center !important; }
 
-        /* Konten Utama */
+        /* Konten */
         .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
         .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); width: 100%; max-width: 1100px; margin: 0 auto; }
         
@@ -36,14 +36,12 @@
         textarea { min-height: 75px; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .itemrow { display: grid; grid-template-columns: 2fr 100px 100px auto; gap: 8px; margin: 8px 0; }
-        input:disabled, select:disabled, textarea:disabled { background-color: #f8fafc; color: #334155; cursor: not-allowed; }
+        input:disabled, select:disabled, textarea:disabled { background-color: #f8fafc; color: #334155; cursor: not-allowed; border-color: transparent; }
 
         .btn-gold { background: var(--gold); color: #172b45; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 15px; }
         .btn-secondary { background: #e9edf3; color: var(--navy); border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-blue { background: #3498db; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-blue:hover { background: #2980b9; }
         
-        /* Tombol Aksi Approver */
         .btn-action-approve { background: #2ecc71; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 6px; }
         .btn-action-reject { background: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
         
@@ -57,10 +55,7 @@
         .col-kategori { width: 150px; }
         .col-detail { width: 150px; } 
         
-        .prod-cell {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; 
-            width: 100%; cursor: pointer; color: var(--navy); transition: 0.2s;
-        }
+        .prod-cell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; cursor: pointer; color: var(--navy); transition: 0.2s; }
         .prod-cell::after { content: ' ▼'; font-size: 10px; color: #999; }
         .prod-cell.expanded { white-space: normal; word-wrap: break-word; overflow: visible; }
         .prod-cell.expanded::after { content: ' ▲'; }
@@ -70,7 +65,7 @@
         .status-APPV_1 { background: #e6f7ff; color: #096dd9; }
         .status-APPROVED { background: #f6ffed; color: #389e0d; }
         .status-REJECTED { background: #fff1f0; color: #cf1322; }
-        .status-RECEIVED { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; } /* Hijau terang */
+        .status-RECEIVED { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
 
         .id-link { color: var(--navy); font-weight: bold; text-decoration: underline; cursor: pointer; }
         .hidden { display: none !important; }
@@ -132,13 +127,12 @@
             <p><button class="btn-gold" id="btnSubmitReq" onclick="submitRequest()">Kirim Permintaan</button></p>
         </div>
 
-        <!-- Data Permintaan (Menu 3) -->
+        <!-- Menu 3: Tabel Semua Data -->
         <div id="previewSection" class="card hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: var(--navy);">Data Permintaan</h3>
                 <div class="export-btns">
-                    <button class="btn-secondary" onclick="exportExcel()" style="background:#27ae60; color:white;">⬇ Excel</button>
-                    <button class="btn-secondary" onclick="exportPDF()" style="background:#c0392b; color:white;">⬇ PDF</button>
+                    <button class="btn-secondary" onclick="exportExcelGlobal()" style="background:#27ae60; color:white;">⬇ Rekap Excel (Semua)</button>
                     <button class="btn-secondary" onclick="loadRequests()">Refresh</button>
                 </div>
             </div>
@@ -148,20 +142,40 @@
 
         <!-- Halaman Detail (Approval & Konfirmasi Terima) -->
         <div id="detailSection" class="card hidden">
-            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
-                <div><h3 style="margin: 0; color: var(--navy);">Rincian ID: <span id="detailDocId"></span></h3><div style="margin-top: 4px;"><span id="detailStatusBadge" class="status"></span></div></div>
-                <button class="btn-secondary" onclick="navTo('previewSection')">Kembali</button>
+            <!-- Header Navigasi -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 15px;">
+                <div>
+                    <h3 style="margin: 0; color: var(--navy);">Rincian ID: <span id="detailDocId"></span></h3>
+                </div>
+                <div class="export-btns">
+                    <button class="btn-secondary" onclick="exportDetailExcel()" style="background:#27ae60; color:white; font-size:12px;">⬇ Excel Khusus ID Ini</button>
+                    <button class="btn-secondary" onclick="exportDetailPDF()" style="background:#c0392b; color:white; font-size:12px;">⬇ PDF Formulir Ini</button>
+                    <button class="btn-secondary" onclick="navTo('previewSection')" style="font-size:12px;">Kembali</button>
+                </div>
             </div>
             
-            <div id="approvalHistory" style="margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 12px; font-family: monospace;"></div>
+            <!-- Area yang akan diubah ke PDF -->
+            <div id="printableDetail" style="padding: 10px; background: #fff;">
+                <div style="margin-bottom: 15px;">Status Saat Ini: <span id="detailStatusBadge" class="status"></span></div>
+                
+                <div class="row">
+                    <div><label>Pemohon</label><input id="detailRequester" disabled></div>
+                    <div><label>Waktu Input</label><input id="detailCreatedAt" disabled></div>
+                </div>
 
-            <div class="row" style="margin-top: 15px;">
-                <div><label>Tanggal</label><input id="detailDate" disabled></div>
-                <div><label>Kategori</label><input id="detailPurpose" disabled></div>
+                <div class="row" style="margin-top: 10px;">
+                    <div><label>Tanggal Kebutuhan</label><input id="detailDate" disabled></div>
+                    <div><label>Kategori Tujuan</label><input id="detailPurpose" disabled></div>
+                </div>
+                <label>Penerima / Customer</label><input id="detailRecipient" disabled>
+                <label>Tujuan Detail</label><textarea id="detailPurposeDetail" disabled></textarea>
+                
+                <label>Estimasi Biaya</label><input id="detailCost" disabled style="font-weight: bold; color: #c0392b;">
+                <label>Daftar Produk</label><div id="detailItemsContainer" style="margin-bottom: 20px;"></div>
+
+                <h4 style="border-bottom: 1px solid var(--line); padding-bottom: 8px;">Histori Persetujuan</h4>
+                <div id="approvalHistory" style="padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 13px; font-family: monospace;"></div>
             </div>
-            <label>Penerima</label><input id="detailRecipient" disabled>
-            <label>Estimasi Biaya</label><input id="detailCost" disabled style="font-weight: bold; color: #c0392b;">
-            <label>Daftar Produk</label><div id="detailItemsContainer" style="margin-bottom: 20px;"></div>
 
             <!-- Area untuk Admin (Approval) -->
             <div id="detailApproverActions" class="hidden" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--line);">
@@ -189,10 +203,10 @@
         const account = new Account(client);
         const databases = new Databases(client);
 
-        // --- GANTI ID DI BAWAH INI SESUAI PROJECT ANDA ---
-        const dbId = 'MASUKKAN_DATABASE_ID'; 
-        const collIdReq = 'MASUKKAN_ID_TABLE_REQUESTS'; 
-        const collIdProd = 'MASUKKAN_ID_TABLE_PRODUCTS';
+        // ID DATABASE DAN TABEL (SUDAH DISESUAIKAN)
+        const dbId = '6aead82c000949827370'; 
+        const collIdReq = '6aead90b001614a13561'; 
+        const collIdProd = '6aeaf660001e29c75a2b';
 
         const approverEmail = 'williams.chandra@ot.id';
         let currentUser = null, isApprover = false, cachedDocs = [], masterProducts = [];
@@ -212,7 +226,6 @@
             loadRequests();
         }).catch(() => showSection('welcomeSection'));
 
-        // Tarik Master Produk (untuk autocomplete dan harga)
         function fetchMasterProducts() {
             databases.listDocuments(dbId, collIdProd, [Query.limit(100)]).then(res => {
                 masterProducts = res.documents;
@@ -243,7 +256,6 @@
             document.getElementById('itemsContainer').appendChild(d);
         }
 
-        // Simpan Request dengan Kalkulasi Harga Pcs/Krt
         function submitRequest() {
             const reqDate = document.getElementById('requiredDate').value;
             const recipient = document.getElementById('recipient').value;
@@ -255,12 +267,9 @@
                 const qty = parseInt(r.querySelector('.itemQty').value) || 1;
                 const uom = r.querySelector('.itemUom').value;
                 
-                // Cari produk di master
-                const prodRef = masterProducts.find(p => p.product_name.toLowerCase() === sku.toLowerCase());
-                
-                // Asumsi: price = Harga 1 Karton, pcs = Isi pcs dalam 1 Karton
+                const prodRef = masterProducts.find(p => (p.product_name || '').toLowerCase() === sku.toLowerCase());
                 const hargaPerKarton = prodRef ? (prodRef.price || 0) : 0;
-                const isiPcsPerKarton = prodRef ? (prodRef.pcs || 1) : 1; // Default 1 agar tidak error bagi 0
+                const isiPcsPerKarton = prodRef ? (prodRef.pcs || 1) : 1; 
                 
                 let itemCost = 0;
                 if (uom === 'krt') {
@@ -269,7 +278,6 @@
                     itemCost = qty * (hargaPerKarton / isiPcsPerKarton);
                 }
                 totalEst += itemCost;
-
                 return `${sku} (${qty} ${uom})`;
             }).join(', ');
 
@@ -294,7 +302,6 @@
             }).catch(e => alert(e.message));
         }
 
-        // Tarik Data Permintaan
         function loadRequests() {
             databases.listDocuments(dbId, collIdReq, [Query.orderDesc('$createdAt')]).then(res => {
                 cachedDocs = res.documents;
@@ -302,10 +309,9 @@
                 
                 let sumCost = 0;
                 res.documents.forEach(d => sumCost += (d.total_estimation || 0));
-                document.getElementById('metricCost').textContent = "Rp " + sumCost.toLocaleString('id-ID');
+                document.getElementById('metricCost').textContent = "Rp " + Math.round(sumCost).toLocaleString('id-ID');
                 
                 document.getElementById('metricPending').textContent = res.documents.filter(d => d.status.includes('PENDING') || d.status.includes('APPV_1')).length;
-                // Hitung yang sudah Approved ATAU sudah Received
                 document.getElementById('metricApproved').textContent = res.documents.filter(d => d.status === 'APPROVED' || d.status === 'RECEIVED').length;
 
                 const rows = res.documents.map(r => {
@@ -323,28 +329,36 @@
                 }).join('');
                 
                 document.getElementById('requestTable').innerHTML = `
-                    <table id="tblExport">
+                    <table id="tblExportGlobal">
                         <thead><tr><th class="col-id">ID</th><th>Tgl Butuh</th><th>Pemohon</th><th class="col-kategori">Kategori</th><th>Penerima</th><th class="col-detail">Detail Produk (Klik)</th><th>Status</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>`;
+            }).catch(e => {
+                document.getElementById('requestTable').innerHTML = `<p style="color:red;">Error: Gagal memuat data. Periksa koneksi/izin tabel.</p>`;
+                console.log(e);
             });
         }
 
         function openDetail(docId) {
             activeDoc = cachedDocs.find(d => d.$id === docId);
             document.getElementById('detailDocId').textContent = activeDoc.$id.substring(0,6).toUpperCase();
+            
+            document.getElementById('detailRequester').value = activeDoc.requester_name || '-';
+            document.getElementById('detailCreatedAt').value = new Date(activeDoc.$createdAt).toLocaleString('id-ID');
             document.getElementById('detailDate').value = activeDoc.required_date;
             document.getElementById('detailPurpose').value = activeDoc.purpose_category;
             document.getElementById('detailRecipient').value = activeDoc.recipient;
-            document.getElementById('detailCost').value = "Rp " + (activeDoc.total_estimation || 0).toLocaleString('id-ID');
+            document.getElementById('detailPurposeDetail').value = activeDoc.purpose_detail || '-';
+            document.getElementById('detailCost').value = "Rp " + Math.round(activeDoc.total_estimation || 0).toLocaleString('id-ID');
+            
             document.getElementById('detailStatusBadge').className = `status status-${activeDoc.status}`;
             document.getElementById('detailStatusBadge').textContent = activeDoc.status;
             
-            document.getElementById('detailItemsContainer').innerHTML = activeDoc.items_list.split(', ').map(i => `<input type="text" value="${i}" disabled style="margin-bottom:5px;">`).join('');
+            document.getElementById('detailItemsContainer').innerHTML = activeDoc.items_list.split(', ').map(i => `<input type="text" value="${i}" disabled style="margin-bottom:5px; border: 1px solid #e5e9f0; background: #fff;">`).join('');
 
-            let hist = `Input: ${new Date(activeDoc.$createdAt).toLocaleString('id-ID')}<br>`;
-            if(activeDoc.appv1_time) hist += `Approve 1: ${activeDoc.appv1_time}<br>`;
-            if(activeDoc.appv2_time) hist += `Approve Final: ${activeDoc.appv2_time}`;
+            let hist = `• Input by Pemohon : ${new Date(activeDoc.$createdAt).toLocaleString('id-ID')}<br>`;
+            if(activeDoc.appv1_time) hist += `• Approved (Tahap 1) : ${activeDoc.appv1_time}<br>`;
+            if(activeDoc.appv2_time) hist += `• Approved (Final)   : ${activeDoc.appv2_time}`;
             document.getElementById('approvalHistory').innerHTML = hist;
 
             // Tombol Admin (Approval)
@@ -366,7 +380,7 @@
             showSection('detailSection');
         }
 
-        // Logika 2-Tier Approval (Khusus Admin)
+        // 2-Tier Approval (Khusus Admin)
         function processApproval(keputusan) {
             if(!isApprover) return;
             let updates = {};
@@ -389,7 +403,7 @@
             });
         }
 
-        // Logika Barang Diterima (Khusus Pemohon)
+        // Barang Diterima (Khusus Pemohon)
         function markAsReceived() {
             const konfirmasi = confirm("Apakah Anda yakin barang untuk request ini sudah Anda terima?");
             if(!konfirmasi) return;
@@ -401,16 +415,47 @@
             }).catch(e => alert("Gagal mengupdate status: " + e.message));
         }
 
-        // --- Fitur Export ---
-        function exportExcel() {
-            let table = document.getElementById("tblExport");
+        // --- FITUR EXPORT ---
+        
+        // Excel Semua Data (Dari Menu 3)
+        function exportExcelGlobal() {
+            let table = document.getElementById("tblExportGlobal");
             let wb = XLSX.utils.table_to_book(table, {sheet:"Data Permintaan"});
-            XLSX.writeFile(wb, "Data_Permintaan.xlsx");
+            XLSX.writeFile(wb, "Rekap_Data_Permintaan.xlsx");
         }
 
-        function exportPDF() {
-            const elem = document.getElementById('tblExport');
-            const opt = { margin: 0.5, filename: 'Data_Permintaan.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
+        // Excel Per ID Khusus (Dari Halaman Detail)
+        function exportDetailExcel() {
+            const data = [
+                ["ID Dokumen", activeDoc.$id.substring(0,6).toUpperCase()],
+                ["Tanggal Kebutuhan", activeDoc.required_date],
+                ["Nama Pemohon", activeDoc.requester_name],
+                ["Kategori", activeDoc.purpose_category],
+                ["Penerima (Customer)", activeDoc.recipient],
+                ["Keterangan / Tujuan", activeDoc.purpose_detail || "-"],
+                ["Daftar Produk", activeDoc.items_list],
+                ["Estimasi Biaya", activeDoc.total_estimation],
+                ["Status Akhir", activeDoc.status],
+                ["Waktu Input", new Date(activeDoc.$createdAt).toLocaleString('id-ID')],
+                ["Waktu Approve 1", activeDoc.appv1_time || "-"],
+                ["Waktu Approve Final", activeDoc.appv2_time || "-"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Formulir Detail");
+            XLSX.writeFile(wb, `Request_${activeDoc.$id.substring(0,6).toUpperCase()}.xlsx`);
+        }
+
+        // PDF Per ID Khusus (Dari Halaman Detail)
+        function exportDetailPDF() {
+            const elem = document.getElementById('printableDetail');
+            const opt = { 
+                margin: 0.5, 
+                filename: `Formulir_Request_${activeDoc.$id.substring(0,6).toUpperCase()}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2 }, 
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
+            };
             html2pdf().set(opt).from(elem).save();
         }
 
