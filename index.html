@@ -34,6 +34,14 @@
         }
         .btn-login-nav { background-color: #ecf0f1; color: #2c3e50; }
         .btn-register-nav { background-color: #4285F4; color: white; }
+        .btn-logout { background-color: #e74c3c; color: white; }
+        .btn-logout:hover { background-color: #c0392b; }
+
+        .welcome-text {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-right: 15px;
+        }
 
         /* Kotak Konten Utama */
         .container {
@@ -46,7 +54,7 @@
             text-align: center;
         }
         
-        .hidden { display: none; }
+        .hidden { display: none !important; }
 
         /* Gaya Form */
         input {
@@ -76,9 +84,17 @@
     <!-- Area Navigasi Atas -->
     <div class="navbar">
         <h2>Sistem Internal</h2>
-        <div class="nav-buttons">
+        
+        <!-- Menu untuk user yang BELUM login -->
+        <div id="guestMenu" class="nav-buttons">
             <button id="showLoginBtn" class="btn-login-nav">Login</button>
             <button id="showRegisterBtn" class="btn-register-nav">Register</button>
+        </div>
+
+        <!-- Menu untuk user yang SUDAH login -->
+        <div id="loggedInMenu" class="nav-buttons hidden">
+            <span class="welcome-text">Welcome, <span id="userNameDisplay"></span> !</span>
+            <button id="logoutBtn" class="btn-logout">Logout</button>
         </div>
     </div>
 
@@ -88,7 +104,13 @@
         <p>Silakan klik Login atau Register di sudut kanan atas untuk masuk ke sistem.</p>
     </div>
 
-    <!-- Form Register (Diperbarui) -->
+    <!-- Halaman Dashboard (Setelah Login) -->
+    <div id="dashboardSection" class="container hidden">
+        <h3>Dashboard Internal</h3>
+        <p>Anda telah berhasil masuk ke dalam sistem.</p>
+    </div>
+
+    <!-- Form Register -->
     <div id="registerSection" class="container hidden">
         <h3>Pendaftaran Akun Baru</h3>
         <input type="text" id="regName" placeholder="Nama Lengkap" required>
@@ -98,10 +120,10 @@
         <button id="doRegisterBtn" class="btn-submit">Daftar Sekarang</button>
     </div>
 
-    <!-- Form Login (Diperbarui) -->
+    <!-- Form Login -->
     <div id="loginSection" class="container hidden">
         <h3>Login Sistem</h3>
-        <input type="text" id="loginId" placeholder="Email / Username" required>
+        <input type="text" id="loginId" placeholder="Email (Wajib Email)" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button id="doLoginBtn" class="btn-submit">Masuk</button>
     </div>
@@ -115,20 +137,46 @@
 
         const account = new Account(client);
 
-        // 2. Logika Navigasi Tampilan
+        // 2. Deklarasi Elemen
         const welcomeSec = document.getElementById('welcomeSection');
         const loginSec = document.getElementById('loginSection');
         const registerSec = document.getElementById('registerSection');
+        const dashboardSec = document.getElementById('dashboardSection');
+        const guestMenu = document.getElementById('guestMenu');
+        const loggedInMenu = document.getElementById('loggedInMenu');
+        const userNameDisplay = document.getElementById('userNameDisplay');
 
+        // 3. Cek Status Login Saat Halaman Dimuat
+        account.get()
+            .then(function (user) {
+                // JIKA SUDAH LOGIN:
+                guestMenu.classList.add('hidden');
+                loggedInMenu.classList.remove('hidden');
+                
+                // Menyembunyikan form, menampilkan dashboard
+                welcomeSec.classList.add('hidden');
+                loginSec.classList.add('hidden');
+                registerSec.classList.add('hidden');
+                dashboardSec.classList.remove('hidden');
+
+                // Mengambil nama depan (karena kita simpan format: Nama (Username))
+                const fullName = user.name;
+                const justName = fullName.split(' (')[0]; // Memotong bagian username
+                userNameDisplay.textContent = justName;
+            })
+            .catch(function (error) {
+                // JIKA BELUM LOGIN: biarkan tampilan default (halaman sambutan)
+            });
+
+        // 4. Logika Navigasi (Untuk Guest)
         document.getElementById('showLoginBtn').addEventListener('click', () => {
             welcomeSec.classList.add('hidden'); registerSec.classList.add('hidden'); loginSec.classList.remove('hidden');
         });
-
         document.getElementById('showRegisterBtn').addEventListener('click', () => {
             welcomeSec.classList.add('hidden'); loginSec.classList.add('hidden'); registerSec.classList.remove('hidden');
         });
 
-        // 3. Logika Register
+        // 5. Logika Register
         document.getElementById('doRegisterBtn').addEventListener('click', () => {
             const name = document.getElementById('regName').value;
             const username = document.getElementById('regUsername').value;
@@ -140,8 +188,6 @@
                 return;
             }
 
-            // Karena Appwrite tidak memiliki kolom khusus "Username", 
-            // kita bisa menyiasatinya dengan menggabungkan nama dan username agar datanya tersimpan.
             const combinedName = `${name} (${username})`;
 
             account.create(ID.unique(), email, password, combinedName)
@@ -152,24 +198,31 @@
                 .catch(error => alert('Registrasi gagal: ' + error.message));
         });
 
-        // 4. Logika Login
+        // 6. Logika Login
         document.getElementById('doLoginBtn').addEventListener('click', () => {
             const loginId = document.getElementById('loginId').value;
             const password = document.getElementById('loginPassword').value;
 
-            // Cek apakah user mengetik email atau username
-            // Secara bawaan, Appwrite membutuhkan Email. Kita beri peringatan jika mereka mencoba pakai Username.
             if (!loginId.includes('@')) {
-                alert('Peringatan: Untuk saat ini sistem mewajibkan penggunaan Email untuk proses otentikasi. Silakan masukkan Email Anda.');
+                alert('Silakan masukkan Email yang terdaftar, bukan Username.');
                 return;
             }
 
             account.createEmailPasswordSession(loginId, password)
                 .then(() => {
-                    alert('Login berhasil!');
-                    // window.location.href = 'dashboard.html'; // Aktifkan jika halaman dashboard sudah ada
+                    // Jika login berhasil, refresh halaman agar status login terdeteksi di atas
+                    window.location.reload();
                 })
                 .catch(error => alert('Login gagal: ' + error.message));
+        });
+
+        // 7. Logika Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            account.deleteSession('current')
+                .then(() => {
+                    // Refresh halaman setelah logout
+                    window.location.reload();
+                });
         });
     </script>
 </body>
