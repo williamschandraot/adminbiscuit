@@ -22,7 +22,7 @@
 
         /* Konten Utama */
         .main-content { flex: 1; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
-        .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); width: 100%; max-width: 1000px; margin: 0 auto; }
+        .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); width: 100%; max-width: 1100px; margin: 0 auto; }
         
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 15px; }
         .grid-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(16,42,67,0.05); }
@@ -39,11 +39,21 @@
         .btn-gold:hover { opacity: 0.9; }
         .btn-secondary { background: #e9edf3; color: var(--navy); border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
+        /* Tombol Aksi */
+        .btn-action-approve { background: #2ecc71; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
+        .btn-action-reject { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .btn-action-approve:hover { background: #27ae60; }
+        .btn-action-reject:hover { background: #c0392b; }
+
+        /* Tabel & Status Badge */
         .tablewrap { overflow: auto; margin-top: 12px; }
         table { border-collapse: collapse; width: 100%; background: #fff; }
         th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
         th { background: #f8fafc; color: #475467; font-weight: bold; }
-        .status { padding: 4px 8px; border-radius: 20px; background: #eef2f6; font-size: 12px; font-weight: bold; }
+        .status { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-PENDING { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+        .status-APPROVED { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+        .status-REJECTED { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
 
         .hidden { display: none !important; }
         .text-center { text-align: center; }
@@ -62,15 +72,17 @@
             <button onclick="showSection('registerSection')" id="navRegister">Daftar Akun</button>
         </div>
 
-        <!-- Menu Internal (Setelah Login) -->
+        <!-- Menu Internal -->
         <div id="loggedInMenu" class="hidden">
             <div class="welcome-text" id="userNameDisplay">Memuat akun...</div>
             <button class="nav-btn active" onclick="navTo('dashboardSection', this)">Menu 1 (Dashboard)</button>
             <button class="nav-btn" onclick="navTo('requestSection', this)">Menu 2 (Input Request)</button>
             <button class="nav-btn" onclick="navTo('previewSection', this); loadRequests();">Menu 3 (Data Permintaan)</button>
-            <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">Menu 4</button>
-            <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">Menu 5</button>
             
+            <!-- Menu 4: Khusus untuk Approver -->
+            <button id="navApproval" class="nav-btn hidden" onclick="navTo('approvalSection', this); loadApprovalInbox();">Menu 4 (Approval Inbox)</button>
+            
+            <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">Menu 5</button>
             <button id="logoutBtn" class="btn-logout">Logout Sistem</button>
         </div>
     </div>
@@ -103,7 +115,7 @@
         </div>
 
         <!-- Menu 1: Dashboard -->
-        <div id="dashboardSection" class="hidden" style="max-width: 1000px; margin: 0 auto; width: 100%;">
+        <div id="dashboardSection" class="hidden" style="max-width: 1100px; margin: 0 auto; width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h2 style="margin:0; color: var(--navy);">Dashboard</h2>
@@ -113,9 +125,9 @@
             </div>
             
             <div class="grid">
-                <div class="grid-card"><div class="muted">Total permintaan</div><div class="metric" id="metricTotal">0</div></div>
-                <div class="grid-card"><div class="muted">Menunggu proses</div><div class="metric">0</div></div>
-                <div class="grid-card"><div class="muted">Disetujui / diproses</div><div class="metric">0</div></div>
+                <div class="grid-card"><div class="muted">Total Permintaan</div><div class="metric" id="metricTotal">0</div></div>
+                <div class="grid-card"><div class="muted">Menunggu Proses</div><div class="metric" id="metricPending" style="color: #d46b08;">0</div></div>
+                <div class="grid-card"><div class="muted">Disetujui</div><div class="metric" id="metricApproved" style="color: #389e0d;">0</div></div>
                 <div class="grid-card"><div class="muted">Status Server</div><div class="metric" style="color: #2ecc71; font-size: 18px;">Online Terhubung</div></div>
             </div>
         </div>
@@ -147,7 +159,7 @@
             <p><button class="btn-gold" id="btnSubmitReq" onclick="submitRequest()">Kirim Permintaan</button></p>
         </div>
 
-        <!-- Menu 3: Data Permintaan (Preview) -->
+        <!-- Menu 3: Data Permintaan (Semua Data) -->
         <div id="previewSection" class="card hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: var(--navy);">Data Permintaan</h3>
@@ -155,6 +167,20 @@
             </div>
             <div class="tablewrap" id="requestTable">
                 Memuat tabel data...
+            </div>
+        </div>
+
+        <!-- Menu 4: Approval Inbox -->
+        <div id="approvalSection" class="card hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h3 style="margin: 0; color: var(--navy);">Approval Inbox</h3>
+                    <p class="muted" style="margin: 5px 0 0;">Daftar permintaan yang menunggu peninjauan dan persetujuan.</p>
+                </div>
+                <button class="btn-secondary" onclick="loadApprovalInbox()">Refresh Inbox</button>
+            </div>
+            <div class="tablewrap" id="approvalTable">
+                Memuat inbox approval...
             </div>
         </div>
 
@@ -169,21 +195,40 @@
         const account = new Account(client);
         const databases = new Databases(client);
 
-        // ID Database & Table
         const dbId = '6aead82c000949827370';
         const collId = '6aead90b001614a13561';
 
+        // =========================================================================
+        // DAFTAR EMAIL APPROVER (Bisa ditambahkan lebih dari satu)
+        // Masukkan email Anda dan user lain yang diizinkan untuk Approve/Reject
+        // =========================================================================
+        const approverEmails = [
+            'admin@biscuit.com',           // Ganti dengan email login Anda
+            'williams.chandra@gmail.com'    // Tambahkan email lain jika ada
+        ];
+
         let currentUser = null;
+        let isApprover = false;
 
         // Cek Sesi Login
         account.get().then(user => {
             currentUser = user;
+            
+            // Cek apakah user saat ini terdaftar sebagai Approver
+            isApprover = approverEmails.map(e => e.toLowerCase()).includes((user.email || '').toLowerCase());
+
             document.getElementById('guestMenu').classList.add('hidden');
             document.getElementById('loggedInMenu').classList.remove('hidden');
             
-            document.getElementById('userNameDisplay').textContent = user.name;
+            // Tampilkan badge Approver jika berhak
+            document.getElementById('userNameDisplay').textContent = `${user.name} ${isApprover ? '(Approver)' : ''}`;
             document.getElementById('helloMsg').textContent = `Halo, ${user.name}. Ini ringkasan aktivitas Biscuit Admin.`;
             
+            // Jika akun adalah approver, tampilkan tombol Menu 4
+            if (isApprover) {
+                document.getElementById('navApproval').classList.remove('hidden');
+            }
+
             showSection('dashboardSection');
             addItem();
             loadRequests();
@@ -198,7 +243,7 @@
         }
 
         function showSection(id) {
-            const sections = ['welcomeSection', 'loginSection', 'registerSection', 'dashboardSection', 'requestSection', 'previewSection'];
+            const sections = ['welcomeSection', 'loginSection', 'registerSection', 'dashboardSection', 'requestSection', 'previewSection', 'approvalSection'];
             sections.forEach(sec => document.getElementById(sec).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
 
@@ -248,6 +293,7 @@
                     document.getElementById('itemsContainer').innerHTML = '';
                     addItem();
                     btn.textContent = 'Kirim Permintaan';
+                    loadRequests();
                 })
                 .catch(err => { 
                     alert('Gagal menyimpan: ' + err.message); 
@@ -255,11 +301,39 @@
                 });
         }
 
+        function updateStatus(docId, newStatus) {
+            if (!isApprover) {
+                return alert("Akses ditolak: Akun Anda tidak memiliki hak untuk menyetujui permintaan.");
+            }
+
+            const konfirmasi = confirm(`Apakah Anda yakin ingin menandai permintaan ini sebagai ${newStatus}?`);
+            if (!konfirmasi) return;
+
+            databases.updateDocument(dbId, collId, docId, { status: newStatus })
+                .then(() => {
+                    alert(`Permintaan berhasil diubah statusnya menjadi ${newStatus}!`);
+                    loadRequests();
+                    if (isApprover) loadApprovalInbox();
+                })
+                .catch(err => {
+                    alert('Gagal mengupdate status: ' + err.message);
+                });
+        }
+
+        // Tarik Semua Data & Hitung Angka Dashboard
         function loadRequests() {
             databases.listDocuments(dbId, collId, [Query.orderDesc('$createdAt')])
                 .then(res => {
+                    // Update Total Permintaan
                     document.getElementById('metricTotal').textContent = res.total;
                     
+                    // Hitung Pending dan Approved secara dinamis
+                    const pendingList = res.documents.filter(d => (d.status || '').toUpperCase() === 'PENDING');
+                    const approvedList = res.documents.filter(d => (d.status || '').toUpperCase() === 'APPROVED');
+                    
+                    document.getElementById('metricPending').textContent = pendingList.length;
+                    document.getElementById('metricApproved').textContent = approvedList.length;
+
                     if(res.documents.length === 0) {
                         document.getElementById('requestTable').innerHTML = '<p>Belum ada data permintaan.</p>';
                         return;
@@ -267,6 +341,19 @@
                     
                     const rows = res.documents.map(r => {
                         const createdAt = new Date(r.$createdAt).toLocaleString('id-ID');
+                        const statusClass = `status-${(r.status || 'PENDING').toUpperCase()}`;
+                        
+                        // Kolom aksi hanya menampilkan tombol jika user adalah Approver
+                        let actionButtons = '-';
+                        if (isApprover && (r.status || '').toUpperCase() === 'PENDING') {
+                            actionButtons = `
+                                <button class="btn-action-approve" onclick="updateStatus('${r.$id}', 'APPROVED')">Approve</button>
+                                <button class="btn-action-reject" onclick="updateStatus('${r.$id}', 'REJECTED')">Reject</button>
+                            `;
+                        } else if ((r.status || '').toUpperCase() !== 'PENDING') {
+                            actionButtons = `<small class="muted">Selesai</small>`;
+                        }
+
                         return `
                             <tr>
                                 <td><b>${r.$id.substring(0,6).toUpperCase()}</b></td>
@@ -276,7 +363,8 @@
                                 <td>${r.recipient}</td>
                                 <td>${r.items_list}</td>
                                 <td>${createdAt}</td>
-                                <td><span class="status">${r.status}</span></td>
+                                <td><span class="status ${statusClass}">${r.status}</span></td>
+                                <td>${actionButtons}</td>
                             </tr>
                         `;
                     }).join('');
@@ -293,6 +381,7 @@
                                     <th>Detail Produk</th>
                                     <th>Waktu Input</th>
                                     <th>Status</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>${rows}</tbody>
@@ -300,6 +389,60 @@
                 })
                 .catch(err => {
                     document.getElementById('requestTable').innerHTML = `<p style="color:red;">Gagal memuat: ${err.message}</p>`;
+                });
+        }
+
+        // Tarik Data Khusus Pending (Menu 4)
+        function loadApprovalInbox() {
+            if (!isApprover) return;
+
+            databases.listDocuments(dbId, collId, [Query.equal('status', 'PENDING'), Query.orderDesc('$createdAt')])
+                .then(res => {
+                    if (res.documents.length === 0) {
+                        document.getElementById('approvalTable').innerHTML = '<p class="muted">Tidak ada permintaan yang menunggu approval saat ini.</p>';
+                        return;
+                    }
+
+                    const rows = res.documents.map(r => {
+                        const createdAt = new Date(r.$createdAt).toLocaleString('id-ID');
+                        return `
+                            <tr>
+                                <td><b>${r.$id.substring(0,6).toUpperCase()}</b></td>
+                                <td>${r.required_date}</td>
+                                <td>${r.requester_name}</td>
+                                <td>${r.purpose_category}</td>
+                                <td>${r.recipient}</td>
+                                <td>${r.items_list}</td>
+                                <td>${r.purpose_detail || '-'}</td>
+                                <td>${createdAt}</td>
+                                <td>
+                                    <button class="btn-action-approve" onclick="updateStatus('${r.$id}', 'APPROVED')">Approve</button>
+                                    <button class="btn-action-reject" onclick="updateStatus('${r.$id}', 'REJECTED')">Reject</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    document.getElementById('approvalTable').innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tgl Butuh</th>
+                                    <th>Diajukan Oleh</th>
+                                    <th>Kategori</th>
+                                    <th>Penerima</th>
+                                    <th>Produk</th>
+                                    <th>Keterangan</th>
+                                    <th>Waktu Submit</th>
+                                    <th>Keputusan</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>`;
+                })
+                .catch(err => {
+                    document.getElementById('approvalTable').innerHTML = `<p style="color:red;">Gagal memuat inbox: ${err.message}</p>`;
                 });
         }
 
